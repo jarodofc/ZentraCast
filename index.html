@@ -2832,7 +2832,8 @@
         if (channel.headers && channel.headers['User-Agent']) {
           params.append('header', 'User-Agent: ' + String(channel.headers['User-Agent']).slice(0, 200));
         }
-        return 'wvc-x-callback://open?' + params.toString();
+        // O esquema oficial usa percent-encoding (%20), não form-encoding (+).
+        return 'wvc-x-callback://open?' + Array.from(params.entries()).map(([key, value]) => encodeURIComponent(key) + '=' + encodeURIComponent(value)).join('&');
       }
 
       function openInWebVideoCaster(channel) {
