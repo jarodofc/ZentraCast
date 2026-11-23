@@ -7,8 +7,10 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "build": "npm run check && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --experimental-strip-types --test tests/iptv.test.mjs",
+    "check": "npm run test && npm run typecheck"
   },
   "engines": {
     "node": ">=22.12.0"
