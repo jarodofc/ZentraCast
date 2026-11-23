@@ -3,7 +3,7 @@
 // são TypeScript estrito e testáveis. A migração de DOM será incremental.
 import { OFFICIAL_PLAYLISTS, CDN_MIRRORS } from './iptv/catalogs';
 import { parseM3U8 as parseM3U8Typed, serializeM3U } from './iptv/m3u';
-import { fetchPlaylistWithFailover, MAX_PLAYLIST_BYTES, PLAYLIST_CACHE_NAME } from './network/playlist';
+import { fetchPlaylistWithFailover, fetchPlaylistText, MAX_PLAYLIST_BYTES } from './network/playlist';
 import { buildWebVideoCasterUrl } from './cast/web-video-caster';
 import { loadHlsLibrary } from './player/hls-loader';
 
