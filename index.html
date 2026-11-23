@@ -1899,7 +1899,7 @@
                 <p class="text-xs sm:text-[13px] font-bold truncate">${escapeHtml(ch.name)}</p>
                 ${isPlaying ? '<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 live-dot flex-shrink-0"></span>' : ''}
               </div>
-              <p class="text-[11px] text-sec truncate mt-0.5">${escapeHtml(ch.group || 'Geral')} <span class="opacity-60 font-mono text-[10px]">• ${escapeHtml(host || 'stream')}</span></p>
+              <p class="text-[11px] text-sec truncate mt-0.5">${escapeHtml(ch.group || 'Geral')}${ch.source ? ' • ' + escapeHtml(ch.source) : ''} <span class="opacity-60 font-mono text-[10px]">• ${escapeHtml(host || 'stream')}</span></p>
             </div>
             <button type="button" data-fav-url="${escapeHtml(ch.url)}" data-fav-idx="${i}"
               class="m3-btn w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${isFav ? 'text-rose-400 bg-rose-500/15' : 'text-ter hover:text-indigo-400 hover:bg-slate-500/10'}"
@@ -2259,7 +2259,7 @@
         }
         if (playSeq !== state.streamPlaybackSeq) return;
         if (!Hls.isSupported()) {
-          showDiagnosticError('media', 'HLS incompatível', 'Este navegador não oferece MediaSource para o stream e não tem reprodução HLS nativa.');
+          showDiagnosticError('media', 'HLS incompatível', 'Este navegador não oferece MediaSource nem HLS nativo. Envie o vídeo ao Web Video Caster ou tente outro navegador.');
           return;
         }
         const hls = new Hls({
@@ -2300,7 +2300,7 @@
           const code = data.response?.code || data.response?.status || 0;
           if (data.type === Hls.ErrorTypes.NETWORK_ERROR && !code) {
             showDiagnosticError('cors', 'Stream inacessível no navegador',
-              'A origem recusou a conexão, não respondeu ou bloqueou as requisições HLS por CORS. O diagnóstico DNS não remove essas restrições. Copie a URL para um aplicativo externo se necessário.');
+              'A origem recusou a conexão, não respondeu ou bloqueou as requisições HLS por CORS. O diagnóstico DNS não remove essas restrições. Se estiver no celular, experimente o botão WVC para abrir no Web Video Caster.');
           } else {
             showDiagnosticError('media', code ? 'Servidor retornou HTTP ' + code : 'Falha de decodificação',
               'Detalhe técnico: ' + (data.details || 'Erro fatal na reprodução') + '. Tente recarregar o sinal.');
