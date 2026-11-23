@@ -3,7 +3,7 @@ import type { Mirror, PlaylistSource } from '../types';
 /** Playlists públicas e listas unificadas. Não hospedamos os streams. */
 export const OFFICIAL_PLAYLISTS: PlaylistSource[] = [
   { id: 'canais', name: 'Canais IPTV', file: 'CanaisIPTV.m3u8' },
-  { id: 'unificado', name: '📡 Tudo em um', combine: ['canais','ramys-geral','ramys-br01','ramys-br02','ramys-br03','ramys-br04','filmes-series','iptvorg-br','free-tv'] },
+  { id: 'unificado', name: 'Tudo em um', combine: ['canais','ramys-geral','ramys-br01','ramys-br02','ramys-br03','ramys-br04','filmes-series','iptvorg-br','free-tv'] },
   { id: 'filmes-series', name: 'Filmes e Séries', file: 'Filmes-Series.m3u8' },
   { id: 'ramys-geral', name: 'Ramys Geral', file: 'Canais.m3u8' },
   { id: 'ramys-br01', name: 'Brasil 01', file: 'CanaisBR01.m3u8' },
