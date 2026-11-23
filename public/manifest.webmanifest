@@ -1,0 +1,19 @@
+{
+  "name": "ZentraCast — IPTV & Cast",
+  "short_name": "ZentraCast",
+  "description": "Reprodução IPTV e compartilhamento com Web Video Caster direto no navegador",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0B111B",
+  "theme_color": "#0B111B",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
