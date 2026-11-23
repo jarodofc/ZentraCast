@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>IPTV Brasil 2026 • DoH DNS Edition</title>
+  <title>zPLAYER • IPTV Hub + Web Video Caster</title>
+  <meta name="description" content="Catálogo IPTV unificado para navegador e Web Video Caster. Importação M3U, HLS e diagnóstico de rede sem backend próprio.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -370,7 +371,7 @@
               <h1 class="text-sm sm:text-base font-extrabold tracking-tight truncate">IPTV Brasil 2026</h1>
               <span class="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-500 dark:text-emerald-300 border border-emerald-500/25">DoH DNS</span>
             </div>
-            <p class="text-[11px] text-sec truncate hidden md:block">Diagnóstico DNS via API • CDN direta • Sem backend</p>
+            <p class="text-[11px] text-sec truncate hidden md:block">Diagnóstico DoH • Catálogo unificado • Web Video Caster</p>
           </div>
         </div>
 
@@ -881,10 +882,20 @@
       const PLAYLIST_CACHE_NAME = "zplayer-playlists-v2";
       const BATCH_CONCURRENCY = 6;
 
-      // >>> EDITE AQUI: nomes exatos dos arquivos .m3u8 na raiz do repositório Ramys/Iptv-Brasil-2026 <<<
+      // Fontes verificadas, acessadas diretamente no navegador.
       const OFFICIAL_PLAYLISTS = [
-        { id: 'canais', name: 'Canais', file: 'CanaisIPTV.m3u8' },
-        { id: 'filmes-series', name: 'Filmes e Séries', file: 'FilmesSeries.m3u8' },
+        { id: 'canais', name: 'Canais IPTV', file: 'CanaisIPTV.m3u8' },
+        { id: 'unificado', name: '📡 Tudo em um', combine: ['canais', 'ramys-geral', 'ramys-br01', 'ramys-br02', 'ramys-br03', 'ramys-br04', 'filmes-series', 'iptvorg-br', 'free-tv'] },
+        { id: 'filmes-series', name: 'Filmes e Séries', file: 'Filmes-Series.m3u8' },
+        { id: 'ramys-geral', name: 'Ramys Geral', file: 'Canais.m3u8' },
+        { id: 'ramys-br01', name: 'Brasil 01', file: 'CanaisBR01.m3u8' },
+        { id: 'ramys-br02', name: 'Brasil 02', file: 'CanaisBR02.m3u8' },
+        { id: 'ramys-br03', name: 'Brasil 03', file: 'CanaisBR03.m3u8' },
+        { id: 'ramys-br04', name: 'Brasil 04', file: 'CanaisBR04.m3u8' },
+        { id: 'iptvorg-br', name: 'IPTV-org Brasil', url: 'https://iptv-org.github.io/iptv/countries/br.m3u',
+          mirrors: ['https://raw.githubusercontent.com/iptv-org/iptv/master/streams/br.m3u'] },
+        { id: 'free-tv', name: 'Free-TV Global', url: 'https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8',
+          mirrors: ['https://cdn.jsdelivr.net/gh/Free-TV/IPTV@master/playlist.m3u8'] },
       ];
 
       const CDN_MIRRORS = [
@@ -1360,7 +1371,7 @@
           dom.bootStatusText.innerHTML = `
             <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" /></svg>
             <span class="text-emerald-400 font-bold truncate">Vencedor: ${escapeHtml(fastest.name)} (${fastest.latency} ms • ${escapeHtml(fastest.resolvedIp)})</span>`;
-          dom.bootSubtitle.textContent = 'DNS de menor latência ativado. Carregando a lista de canais diretamente...';
+          dom.bootSubtitle.textContent = 'Diagnóstico DoH concluído. Carregando listas diretamente...';
           setTimeout(enterMainApp, 750);
         } else {
           state.activeDohId = state.dohProviders[0].id;
@@ -1649,6 +1660,7 @@
       }
 
       async function loadOfficialPlaylist(playlistObj) {
+        if (playlistObj.combine) return loadUnifiedPlaylist(playlistObj);
         stopBatchAuditIfRunning();
         const seq = ++state.playlistLoadSeq;
         state.currentPlaylist = playlistObj;
@@ -1659,7 +1671,7 @@
         resetCatalogUi();
 
         try {
-          const { text, mirror } = await fetchOfficialPlaylistWithCdnFailover(playlistObj.file);
+          const { text, mirror } = await fetchPlaylistSource(playlistObj);
           if (seq !== state.playlistLoadSeq) return;
           const parsed = parseM3U8(text);
           state.allChannels = parsed;
@@ -1678,7 +1690,7 @@
           dom.cdnOriginStatus.textContent = 'Falha nos espelhos CDN diretos';
           dom.listEmptyState.classList.remove('hidden');
           dom.emptyStateTitle.textContent = 'Não foi possível carregar esta lista';
-          dom.emptyStateDesc.textContent = `Verifique sua conexão e se o arquivo "${playlistObj.file}" existe no repositório. Você também pode importar uma lista manualmente.`;
+          dom.emptyStateDesc.textContent = 'Fonte indisponível, lenta ou bloqueada por CORS. Tente outra lista ou importe um arquivo M3U local.';
           dom.retryPlaylistBtn.classList.remove('hidden');
           showToast('Falha ao baixar lista nos espelhos CDN.', 'error');
         }
@@ -2448,7 +2460,7 @@
         });
 
         dom.retryPlaylistBtn.addEventListener('click', () => {
-          if (state.currentPlaylist && state.currentPlaylist.file) loadOfficialPlaylist(state.currentPlaylist);
+          if (state.currentPlaylist && (state.currentPlaylist.file || state.currentPlaylist.url || state.currentPlaylist.combine)) loadOfficialPlaylist(state.currentPlaylist);
         });
 
         // Controles do player
