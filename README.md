@@ -1,53 +1,66 @@
 # zPLAYER — IPTV Hub + Web Video Caster
 
-Interface IPTV estática em português, com catálogo multifontes, HLS.js e integração com **Web Video Caster**. Implementação em HTML/CSS/JavaScript executada no navegador: **sem backend, proxy ou credenciais de API**.
+Player IPTV estático, com múltiplas fontes M3U, diagnóstico DoH e integração com **Web Video Caster**. A aplicação roda **inteiramente no navegador**, com HTML5, CSS3/Tailwind, TypeScript, HLS.js e Vite. Não exige backend, proxy próprio ou token para carregar as fontes públicas configuradas.
 
-## Início rápido
+## Abrir e transmitir
 
-1. Abra o [zPLAYER](https://zplayer-alpha.vercel.app/) no navegador ou dentro do navegador integrado do app Web Video Caster.
-2. Selecione **📡 Tudo em um** para unir as listas; ou abra uma fonte individual para carregar mais rápido.
-3. Clique no canal e, no celular, toque em **📺 WVC** para encaminhar ao aplicativo (Android/iOS).
-4. Use **Exportar M3U** para salvar a playlist atual no dispositivo ou **Compartilhar canal** para enviar um link pelo menu de compartilhamento do celular.
+1. Acesse [zPLAYER](https://zplayer-alpha.vercel.app/) no navegador do celular ou no navegador integrado do Web Video Caster.
+2. Selecione **📡 Tudo em um**, uma lista individual ou importe uma URL/arquivo M3U.
+3. Escolha um canal. Use **📺 WVC** para abrir o stream no Web Video Caster ou **Compartilhar canal** para enviar a URL por outros aplicativos.
+4. Use **Exportar M3U** para salvar o catálogo no seu dispositivo e importá-lo em um player compatível.
 
-O botão WVC usa o protocolo documentado `wvc-x-callback://open?url=...`, com título, capa, tipo MIME e, quando presente no M3U, Referer e User-Agent. Consulte a [integração oficial](https://www.webvideocaster.com/integrations). A abertura do app depende de ele estar instalado e de o navegador/SO aceitar o esquema.
+O protocolo `wvc-x-callback://open` é suportado pelo aplicativo móvel, mas depende de o sistema operacional permitir o redirecionamento e de o app estar instalado. Consulte a [documentação oficial](https://www.webvideocaster.com/integrations).
 
-## Catálogos
+## Arquitetura
 
-| Fonte | Arquivo ou endpoint |
-|---|---|
-| Ramys / IPTV Brasil 2026 | `CanaisIPTV.m3u8`, `Canais.m3u8`, `CanaisBR01.m3u8` a `CanaisBR04.m3u8`, `Filmes-Series.m3u8` |
-| iptv-org Brasil | `https://iptv-org.github.io/iptv/countries/br.m3u` |
-| Free-TV Global | `https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8` |
-| Listas próprias | URL de playlist ou arquivo local `.m3u/.m3u8` |
+| Arquivo/módulo | Linguagem | Responsabilidade |
+|---|---|---|
+| `index.html` | HTML5 | Interface e elementos do player |
+| `src/styles/app.css` | CSS3 + Tailwind | Liquid Glass, temas e responsividade; compilado no build |
+| `src/main.ts` | TypeScript | Entrada do aplicativo e importação de estilos |
+| `src/app.ts` | TypeScript (controlador legado em migração) | Estado da UI, eventos, favoritos, DoH, telemetria e fluxo de reprodução |
+| `src/types.ts` | TypeScript estrito | Tipos dos canais, listas e cabeçalhos |
+| `src/iptv/m3u.ts` | TypeScript estrito | Parser e exportador M3U |
+| `src/iptv/catalogs.ts` | TypeScript estrito | Fontes IPTV e espelhos CDN |
+| `src/network/playlist.ts` | TypeScript estrito | Fetch com timeout/limites, failover e cache de listas |
+| `src/player/hls-loader.ts` | TypeScript estrito | HLS.js carregado sob demanda, com fallback em CDN |
+| `src/cast/web-video-caster.ts` | TypeScript estrito | Deep links para abrir streams no WVC |
+| `vite.config.ts` e `vercel.json` | Configuração | Compilação e publicação estática na Vercel |
 
-A opção **Tudo em um** carrega até três fontes ao mesmo tempo, exibe resultados progressivamente, remove URLs duplicadas e aceita falhas parciais. Listas importadas manualmente também entram no catálogo combinado durante a sessão. São mantidos até 30 mil streams únicos em memória por catálogo unificado para limitar o consumo. O código não modifica nem redistribui os arquivos das listas públicas.
+O controlador `src/app.ts` mantém temporariamente `// @ts-nocheck` para preservar o funcionamento da interface legada. Os **novos módulos têm verificação de tipos estrita**; o controlador será tipado gradualmente. Não confunda essa migração com uma reescrita total da aplicação.
 
-## Conexão e compatibilidade
+## Desenvolver e publicar
 
-- **No navegador:** HTML5 `<video>` e HLS.js, quando necessário, com tentativa de reconexão e CDN alternativa para a biblioteca e os catálogos.
-- **No Web Video Caster:** encaminhamento direto dos endereços e metadados compatíveis via esquema oficial, sem transmissão de vídeo pelo servidor do zPLAYER.
-- **DNS-over-HTTPS:** consulta servidores públicos para diagnóstico e latência. **Não troca o DNS do navegador**.
-- **Cache:** quando permitido, Cache Storage conserva playlists já abertas neste dispositivo.
-- **Offline:** só há fallback para **listas previamente armazenadas em cache**; a reprodução de streams remotos requer conexão.
+**Requisitos:** Node.js 22.12+ e npm.
 
-### Restrições inevitáveis
+```bash
+npm install
+npm run dev         # servidor local (Vite)
+npm run typecheck   # verifica os módulos tipados
+npm run build       # gera a pasta dist/
+npm run preview     # visualiza o build local
+```
 
-- O navegador **não consegue contornar CORS** de um servidor remoto. O arquivo local pode ser importado, mas a reprodução HLS também pode depender de CORS.
-- **DRM**, expiração de tokens, geobloqueio, servidores fora do ar, protocolos/áudio/vídeo não suportados e autenticação específica podem impedir a reprodução ou o cast.
-- A Smart TV/receptor tem de conseguir acessar a URL e decodificar seu stream. O Web Video Caster não garante compatibilidade universal.
-- Streams em HTTP em uma página HTTPS podem ser bloqueados como conteúdo misto; forçar HTTPS só funciona quando o servidor de origem o suporta.
-- Use apenas listas e transmissões para as quais tenha autorização.
+A Vercel usa `npm run build` e publica o conteúdo estático de `dist/`. **Nenhuma aplicação Node.js fica rodando em produção.** Não abra `index.html` com `file://` para desenvolvimento; use o servidor Vite ou a URL de produção.
 
-## Testes realizados no código
+## Fontes IPTV
 
-- Sintaxe JavaScript e IDs duplicados do HTML.
-- Parser M3U: agrupamento, deduplicação e leitura de `#EXTVLCOPT:http-referrer` / `http-user-agent`.
-- Construção de URLs de integração WVC.
-- Agregação de URLs únicas com fonte offline simulada e lista importada na sessão.
+- **Ramys / IPTV Brasil 2026:** `CanaisIPTV.m3u8`, `Canais.m3u8`, `CanaisBR01.m3u8`–`CanaisBR04.m3u8`, `Filmes-Series.m3u8`.
+- **iptv-org Brasil:** `https://iptv-org.github.io/iptv/countries/br.m3u`.
+- **Free-TV Global:** `https://raw.githubusercontent.com/Free-TV/IPTV/master/playlist.m3u8`.
+- **Listas próprias:** carregamento via URL HTTP(S) ou arquivos M3U locais.
 
-**Pendência de validação:** a abertura real do app Web Video Caster e a reprodução de cada servidor IPTV precisam de teste em Android/iOS e na TV escolhida; esses dispositivos não foram acessados remotamente.
+O catálogo combinado abre até três fontes em paralelo, mostra resultados progressivamente, deduplica URLs, preserva importações próprias nesta sessão e limita o agregado a 30 mil streams únicos em memória. Nenhum servidor/stream de terceiro é copiado para este repositório.
 
-## Desenvolver
+## Requisitos e limites das conexões
 
-Sirva a raiz do repositório por HTTPS ou servidor HTTP local. A página é `index.html` e não exige processo de build. O Tailwind carregado em tempo de execução e o HLS.js (sob demanda) necessitam dos CDNs correspondentes acessíveis.
+- DNS-over-HTTPS fornece diagnósticos públicos, **não troca o resolvedor do navegador**.
+- CORS, DRM, autenticação por cabeçalho/tokens, bloqueios geográficos, expiração de links, codecs e limitações de reprodução dependem do servidor e do receptor.
+- O player não contorna CORS; mídia HTTP em páginas HTTPS pode ser bloqueada por conteúdo misto.
+- Cache Storage pode guardar playlists já abertas, quando o navegador permite; streams remotos não passam a funcionar offline por isso.
+- O Web Video Caster recebe URL e metadados de cast, não o vídeo transmitido pelo servidor deste projeto.
+- Use listas e conteúdo aos quais tenha permissão de acesso.
 
+## Verificações
+
+O build roda o TypeScript antes da compilação com Vite (`npm run build`). Conferir o status do deploy Vercel após as mudanças. Também é recomendável validar importação local, reprodução HLS, transferência WVC em Android/iOS e codec/áudio na TV real, que não são reproduzíveis apenas por testes de build.
