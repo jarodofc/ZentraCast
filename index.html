@@ -1872,6 +1872,14 @@
               </svg>
             </button>`;
 
+          const castRow = document.createElement('button');
+          castRow.type = 'button';
+          castRow.dataset.wvcIndex = String(i);
+          castRow.textContent = '📺';
+          castRow.title = 'Abrir no Web Video Caster';
+          castRow.setAttribute('aria-label', 'Abrir no Web Video Caster');
+          castRow.className = 'm3-btn w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 hover:bg-cyan-500/20';
+          row.querySelector('button[data-fav-url]').before(castRow);
           const img = row.querySelector('img[data-logo-img]');
           if (img) {
             img.addEventListener('error', () => {
@@ -2440,6 +2448,13 @@
         });
 
         dom.channelList.addEventListener('click', (e) => {
+          const wvcBtn = e.target.closest('button[data-wvc-index]');
+          if (wvcBtn) {
+            e.stopPropagation();
+            const channel = state.filteredChannels[Number(wvcBtn.dataset.wvcIndex)];
+            if (channel) openInWebVideoCaster(channel);
+            return;
+          }
           const favBtn = e.target.closest('button[data-fav-url]');
           if (favBtn) {
             e.stopPropagation();
@@ -2651,6 +2666,199 @@
         }
       }
 
+
+      /* =====================================================================
+         CAST + MULTIFONTES (100% navegador; nenhuma API supera CORS ou DRM)
+         ===================================================================== */
+      async function fetchPlaylistSource(source) {
+        if (source.file) return fetchOfficialPlaylistWithCdnFailover(source.file);
+        const urls = [source.url, ...(source.mirrors || [])].filter(u => /^https?:\/\//i.test(u || ''));
+        if (!urls.length) throw new Error('Fonte sem URL.');
+        const controllers = urls.map(() => new AbortController());
+        try {
+          const data = await Promise.any(urls.map(async (url, i) => {
+            const text = await fetchPlaylistText(url, controllers[i].signal, 15000);
+            return { text, mirror: { label: new URL(url).hostname }, url };
+          }));
+          controllers.forEach(c => c.abort());
+          if ('caches' in window && window.isSecureContext) {
+            caches.open(PLAYLIST_CACHE_NAME).then(c => c.put(data.url, new Response(data.text))).catch(() => {});
+          }
+          return data;
+        } catch (error) {
+          controllers.forEach(c => c.abort());
+          if ('caches' in window && window.isSecureContext) {
+            try {
+              const cache = await caches.open(PLAYLIST_CACHE_NAME);
+              for (const url of urls) {
+                const hit = await cache.match(url);
+                if (!hit) continue;
+                const text = await hit.text();
+                if (text.length <= MAX_PLAYLIST_BYTES && /#EXTINF:/.test(text)) {
+                  return { text, mirror: { label: 'Cache local' }, url };
+                }
+              }
+            } catch {}
+          }
+          throw new Error('Fonte indisponível ou bloqueada por CORS.');
+        }
+      }
+
+      async function loadUnifiedPlaylist(playlist) {
+        stopBatchAuditIfRunning();
+        const seq = ++state.playlistLoadSeq;
+        state.currentPlaylist = playlist;
+        state.activeTab = 'all';
+        updateTabButtons();
+        dom.currentPlaylistName.textContent = playlist.name;
+        dom.cdnOriginStatus.textContent = 'Unificando fontes de IPTV diretamente no navegador...';
+        renderPlaylistPills();
+        resetCatalogUi();
+        const sources = playlist.combine.map(id => OFFICIAL_PLAYLISTS.find(x => x.id === id)).filter(Boolean);
+        const queue = sources.slice();
+        const channels = [], seen = new Set(), successes = [], failed = [];
+        let completed = 0;
+        dom.channelCounter.textContent = 'Unificando 0/' + sources.length + ' fontes...';
+        async function worker() {
+          while (queue.length && seq === state.playlistLoadSeq) {
+            const src = queue.shift();
+            if (!src) break;
+            try {
+              const response = await fetchPlaylistSource(src);
+              if (seq !== state.playlistLoadSeq) return;
+              const parsed = parseM3U8(response.text);
+              for (const ch of parsed) {
+                if (channels.length >= 30000) break;
+                if (seen.has(ch.url)) continue;
+                seen.add(ch.url);
+                ch.source = src.name;
+                channels.push(ch);
+              }
+              if (parsed.length) successes.push(src.name); else failed.push(src.name);
+            } catch (error) {
+              failed.push(src.name);
+              console.warn('Playlist sem acesso:', src.name, error.message);
+            } finally {
+              completed++;
+              if (seq === state.playlistLoadSeq) {
+                dom.channelCounter.textContent = 'Unificando ' + completed + '/' + sources.length + ' • ' + channels.length.toLocaleString('pt-BR') + ' streams';
+              }
+            }
+          }
+        }
+        await Promise.all(Array.from({ length: Math.min(sources.length, 3) }, worker));
+        if (seq !== state.playlistLoadSeq) return;
+        state.allChannels = channels;
+        dom.listLoadingState.classList.add('hidden');
+        dom.cdnOriginStatus.textContent = successes.length + '/' + sources.length + ' fontes • ' + channels.length.toLocaleString('pt-BR') + ' URLs únicas';
+        buildCategoryChips();
+        applyFiltersAndRender();
+        if (!channels.length) {
+          dom.listEmptyState.classList.remove('hidden');
+          dom.emptyStateTitle.textContent = 'Nenhuma fonte disponível';
+          dom.emptyStateDesc.textContent = 'Experimente uma fonte individual ou importe um M3U; o navegador depende de CORS.';
+          dom.retryPlaylistBtn.classList.remove('hidden');
+        } else if (failed.length) {
+          showToast('Catálogo parcial: ' + successes.length + '/' + sources.length + ' fontes disponíveis.', 'warning');
+        } else {
+          showToast(channels.length.toLocaleString('pt-BR') + ' streams únicos reunidos.', 'success');
+        }
+      }
+
+      function wvcDeepLink(channel) {
+        if (!channel || !/^https?:\/\//i.test(channel.url || '')) return '';
+        const params = new URLSearchParams();
+        params.set('url', channel.url);
+        params.set('title', String(channel.name || 'IPTV').slice(0, 160));
+        if (safeImageUrl(channel.logo)) params.set('poster', channel.logo);
+        if (safeImageUrl(channel.subtitle)) params.set('subtitle', channel.subtitle);
+        if (/\.m3u8?(?:[?#]|$)/i.test(channel.url)) params.set('mime_type', 'application/vnd.apple.mpegurl');
+        if (channel.headers && /^https?:\/\//i.test(channel.headers.Referer || '')) {
+          params.append('header', 'Referer: ' + channel.headers.Referer.slice(0, 512));
+        }
+        if (channel.headers && channel.headers['User-Agent']) {
+          params.append('header', 'User-Agent: ' + String(channel.headers['User-Agent']).slice(0, 200));
+        }
+        return 'wvc-x-callback://open?' + params.toString();
+      }
+
+      function openInWebVideoCaster(channel) {
+        const link = wvcDeepLink(channel);
+        if (!link) return showToast('A URL precisa ser HTTP ou HTTPS.', 'warning');
+        showToast('Abrindo Web Video Caster. Se não abrir, use Compartilhar canal ou copie o link.', 'info');
+        // Chamada em gesto do usuário: o SO confirma a abertura do aplicativo.
+        window.location.href = link;
+      }
+
+      function exportCatalogM3U() {
+        if (!state.allChannels.length) return showToast('Carregue uma lista antes de exportar.', 'warning');
+        const clean = s => String(s || '').replace(/[\r\n"]/g, ' ').slice(0, 240);
+        const lines = ['#EXTM3U'];
+        for (const ch of state.allChannels) {
+          if (!/^https?:\/\//i.test(ch.url)) continue;
+          lines.push('#EXTINF:-1 tvg-name="' + clean(ch.tvgName || ch.name) + '" tvg-logo="' + clean(ch.logo) + '" group-title="' + clean(ch.group) + '",' + clean(ch.name));
+          if (ch.headers && ch.headers.Referer) lines.push('#EXTVLCOPT:http-referrer=' + ch.headers.Referer);
+          lines.push(ch.url);
+        }
+        const blob = new Blob([lines.join('\n') + '\n'], { type: 'application/vnd.apple.mpegurl;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = url;
+        anchor.download = 'zplayer-' + String(state.currentPlaylist?.id || 'lista').replace(/[^a-z0-9-]/gi, '') + '.m3u';
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        showToast('M3U baixado. Importe no Web Video Caster.', 'success');
+      }
+
+      async function shareChannel() {
+        if (!state.currentChannel) return showToast('Escolha um canal primeiro.', 'info');
+        const ch = state.currentChannel;
+        if (navigator.share) {
+          try { await navigator.share({ title: ch.name, url: ch.url }); return; }
+          catch (error) { if (error.name === 'AbortError') return; }
+        }
+        copyToClipboard(ch.url, 'Link copiado para compartilhar.');
+      }
+
+      function initWebVideoCasterUi() {
+        const button = document.createElement('button');
+        button.id = 'ctrl-wvc-btn';
+        button.type = 'button';
+        button.textContent = '📺 WVC';
+        button.title = 'Abrir canal no Web Video Caster';
+        button.className = 'm3-btn h-9 px-2.5 rounded-xl text-[11px] font-bold bg-gradient-to-r from-cyan-600 to-indigo-600 text-white';
+        dom.ctrlExternalBtn.before(button);
+        button.addEventListener('click', () => {
+          if (state.currentChannel) openInWebVideoCaster(state.currentChannel);
+          else showToast('Selecione um canal primeiro.', 'info');
+        });
+        const errorButton = document.createElement('button');
+        errorButton.id = 'error-wvc-btn';
+        errorButton.type = 'button';
+        errorButton.textContent = '📺 Abrir no WVC';
+        errorButton.className = 'm3-btn px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-cyan-600 to-indigo-600 text-white';
+        dom.errorCopyBtn.before(errorButton);
+        errorButton.addEventListener('click', () => {
+          if (state.currentChannel) openInWebVideoCaster(state.currentChannel);
+        });
+        const panel = document.createElement('div');
+        panel.id = 'wvc-action-panel';
+        panel.className = 'mt-3 px-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 justify-between text-xs';
+        panel.innerHTML = '<p class="text-sec text-[11px] flex-1">📺 <strong>Web Video Caster:</strong> abra esta página no navegador do app ou toque em WVC no canal. A TV precisa suportar o codec e a origem.</p>' +
+          '<div class="flex gap-2 flex-wrap"><button id="wvc-share-btn" type="button" class="m3-pill rounded-full px-3 py-2 font-semibold">Compartilhar canal</button>' +
+          '<button id="wvc-export-btn" type="button" class="m3-pill rounded-full px-3 py-2 font-semibold">Exportar M3U</button></div>';
+        dom.playerWrapper.parentElement.appendChild(panel);
+        document.getElementById('wvc-share-btn').addEventListener('click', shareChannel);
+        document.getElementById('wvc-export-btn').addEventListener('click', exportCatalogM3U);
+        window.zPlayerTools = Object.freeze({
+          buildCastUrl: wvcDeepLink,
+          sourceIds: () => OFFICIAL_PLAYLISTS.map(x => x.id),
+          loadedChannelCount: () => state.allChannels.length,
+        });
+      }
+
       /* ======================================================================
          BOOTSTRAP
          ====================================================================== */
@@ -2663,6 +2871,7 @@
         updateCacheStatsUi();
         bindVideoEvents();
         bindUiEvents();
+        initWebVideoCasterUi();
         // A interface e o catálogo não dependem da disponibilidade de DoH.
         enterMainApp();
         void runBootDnsHandshake().catch(err => console.info("Benchmark DoH:", err));
