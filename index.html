@@ -10,8 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Versão fixa do HLS.js (evita quebras com @latest) -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
+  <meta name="description" content="zPLAYER: player IPTV no navegador, HLS adaptativo, playlists M3U e diagnóstico DNS-over-HTTPS." />
+  <meta name="color-scheme" content="dark light" />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <!-- HLS.js 1.7.4: carregado sob demanda com fallback de CDN. -->
 
   <script>
     tailwind.config = {
@@ -311,7 +313,7 @@
               <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">IPTV Brasil 2026</h1>
               <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-400/30">DoH DNS Edition</span>
             </div>
-            <p id="boot-subtitle" class="text-xs sm:text-sm text-sec mt-0.5">Executando handshake DNS-over-HTTPS (Zero Proxy CORS)...</p>
+            <p id="boot-subtitle" class="text-xs sm:text-sm text-sec mt-0.5">Preparando player e serviços públicos de DNS...</p>
           </div>
         </div>
 
@@ -368,7 +370,7 @@
               <h1 class="text-sm sm:text-base font-extrabold tracking-tight truncate">IPTV Brasil 2026</h1>
               <span class="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-500 dark:text-emerald-300 border border-emerald-500/25">DoH DNS</span>
             </div>
-            <p class="text-[11px] text-sec truncate hidden md:block">DNS-over-HTTPS Nativo • CDN Direta • Zero Proxy CORS</p>
+            <p class="text-[11px] text-sec truncate hidden md:block">Diagnóstico DNS via API • CDN direta • Sem backend</p>
           </div>
         </div>
 
@@ -444,7 +446,7 @@
                 <span id="stream-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 backdrop-blur-md border border-white/15 text-slate-200">
                   <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>AGUARDANDO
                 </span>
-                <span id="stream-dns-pill" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-emerald-200">DNS Ready</span>
+                <span id="stream-dns-pill" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-emerald-200">DoH diagnóstico</span>
               </div>
             </div>
 
@@ -457,7 +459,7 @@
               </div>
               <h3 class="text-base sm:text-lg font-bold text-white">Player HLS + Diagnóstico DoH</h3>
               <p class="text-xs sm:text-sm text-slate-300 max-w-md mt-1">
-                Escolha um canal na lista ao lado. Cada stream passa por um Pre-flight DNS (A, AAAA e CNAME) em tempo real sem nenhum proxy intermediário.
+                Escolha um canal na lista ao lado. O player conecta diretamente à origem. O diagnóstico DoH é independente e não altera o DNS nem o CORS do navegador.
               </p>
             </div>
 
@@ -811,7 +813,7 @@
         <div class="space-y-2">
           <label for="import-url-input" class="block text-xs font-bold text-sec">URL Direta (.m3u ou .m3u8 com CORS)</label>
           <input id="import-url-input" type="url" placeholder="https://raw.githubusercontent.com/.../lista.m3u8" class="themed-input w-full px-3.5 py-2.5 rounded-2xl text-xs font-mono" />
-          <button id="import-url-submit-btn" type="button" class="w-full m3-btn py-2.5 rounded-2xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25">Validar DNS e Carregar Lista</button>
+          <button id="import-url-submit-btn" type="button" class="w-full m3-btn py-2.5 rounded-2xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25">Carregar lista no navegador</button>
         </div>
         <div class="flex items-center gap-3 text-[11px] text-ter">
           <div class="h-px flex-1 bg-slate-500/25"></div><span>OU ARQUIVO DO DISPOSITIVO</span><div class="h-px flex-1 bg-slate-500/25"></div>
@@ -871,10 +873,12 @@
       };
 
       const HANDSHAKE_TEST_HOST = 'raw.githubusercontent.com';
-      const DOH_TIMEOUT_MS = 4500;
+      const DOH_TIMEOUT_MS = 3200;
       const MIN_TTL_SEC = 60;
       const MAX_TTL_SEC = 600;
       const PAGE_SIZE = 60;
+      const MAX_PLAYLIST_BYTES = 12 * 1024 * 1024;
+      const PLAYLIST_CACHE_NAME = "zplayer-playlists-v2";
       const BATCH_CONCURRENCY = 6;
 
       // >>> EDITE AQUI: nomes exatos dos arquivos .m3u8 na raiz do repositório Ramys/Iptv-Brasil-2026 <<<
@@ -1138,7 +1142,7 @@
       function initDohPool() {
         const savedCustom = loadJsonStorage(STORAGE_KEYS.CUSTOM_DOH, []);
         const customList = Array.isArray(savedCustom) ? savedCustom : [];
-        state.dohProviders = [...DEFAULT_DOH_PROVIDERS, ...customList].map(p => ({
+        state.dohProviders = [...DEFAULT_DOH_PROVIDERS, ...customList.filter(p => p && /^https:\/\//i.test(p.template || ""))].map(p => ({
           ...p, status: 'idle', latency: null, resolvedIp: null, dnssec: false,
         }));
       }
@@ -1207,6 +1211,7 @@
 
       async function resolveDns(host, type = 'A', options = {}) {
         const cleanHost = String(host || '').trim().toLowerCase().replace(/\.$/, '');
+        if (!cleanHost || cleanHost.length > 253 || !/^[a-z0-9.:-]+$/i.test(cleanHost)) throw new Error("Domínio inválido para consulta DoH");
         const cleanType = String(type || 'A').toUpperCase();
         const cacheKey = `${cleanHost}|${cleanType}`;
         const now = Date.now();
@@ -1500,35 +1505,67 @@
       /* ======================================================================
          CARREGAMENTO DE PLAYLISTS (CDN FAILOVER)
          ====================================================================== */
-      async function fetchOfficialPlaylistWithCdnFailover(fileName) {
-        let lastErr = null;
-        for (const mirror of CDN_MIRRORS) {
-          const url = mirror.buildUrl(fileName);
-          try {
-            const dnsRes = await resolveDns(mirror.host, 'A');
-            if (dnsRes.statusCode === 3) throw new Error(`DNS NXDOMAIN para ${mirror.host}`);
-          } catch (dnsErr) {
-            console.warn(`Aviso Pre-flight DNS (${mirror.host}):`, dnsErr);
+      async function fetchPlaylistText(url, signal, timeoutMs = 12000) {
+        const controller = new AbortController();
+        const stop = () => controller.abort();
+        if (signal) signal.addEventListener('abort', stop, { once: true });
+        const timer = setTimeout(stop, timeoutMs);
+        try {
+          const response = await fetch(url, { signal: controller.signal, mode: 'cors', cache: 'no-cache' });
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          const length = Number(response.headers.get('content-length') || 0);
+          if (length > MAX_PLAYLIST_BYTES) throw new Error('Lista excede 12 MB');
+          const text = await response.text();
+          if (text.length > MAX_PLAYLIST_BYTES || !/^\s*#EXTM3U|#EXTINF:/m.test(text)) {
+            throw new Error('Playlist M3U inválida ou grande demais');
           }
-
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 15000);
-          try {
-            const resp = await fetch(url, { method: 'GET', signal: controller.signal });
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const text = await resp.text();
-            if (!text || (!text.includes('#EXTM3U') && !text.includes('#EXTINF'))) {
-              throw new Error('Conteúdo M3U8 inválido');
-            }
-            return { text, mirror, url };
-          } catch (err) {
-            lastErr = err;
-          } finally {
-            clearTimeout(timer);
-          }
+          return text;
+        } finally {
+          clearTimeout(timer);
+          if (signal) signal.removeEventListener('abort', stop);
         }
-        throw lastErr || new Error('Todos os espelhos CDN falharam.');
       }
+
+      async function fetchOfficialPlaylistWithCdnFailover(fileName) {
+        const activeRequests = [];
+        const mirrors = CDN_MIRRORS.map(mirror => ({ mirror, url: mirror.buildUrl(fileName) }));
+        try {
+          // Os CDNs são testados em paralelo. O primeiro conteúdo válido vence.
+          const result = await Promise.any(mirrors.map(async ({ mirror, url }) => {
+            const controller = new AbortController();
+            activeRequests.push(controller);
+            const text = await fetchPlaylistText(url, controller.signal, 11000);
+            return { text, mirror, url };
+          }));
+          activeRequests.forEach(controller => controller.abort());
+          if ('caches' in window && window.isSecureContext) {
+            caches.open(PLAYLIST_CACHE_NAME).then(cache => cache.put(result.url, new Response(result.text, {
+              headers: { 'Content-Type': 'application/vnd.apple.mpegurl' }
+            }))).catch(() => {});
+          }
+          return result;
+        } catch (error) {
+          activeRequests.forEach(controller => controller.abort());
+          // Se os servidores falharem, reutiliza uma lista previamente aberta neste dispositivo.
+          if ('caches' in window && window.isSecureContext) {
+            try {
+              const cache = await caches.open(PLAYLIST_CACHE_NAME);
+              for (const { url } of mirrors) {
+                const cached = await cache.match(url);
+                if (cached) {
+                  const text = await cached.text();
+                  if (text.length <= MAX_PLAYLIST_BYTES && /#EXTINF:/.test(text)) {
+                    return { text, mirror: { label: 'Cache local (offline)' }, url };
+                  }
+                }
+              }
+            } catch {}
+          }
+          throw new Error('CDNs indisponíveis ou bloqueados por CORS; importe um arquivo M3U local.');
+        }
+      }
+
+
 
       /* ======================================================================
          PARSER M3U / M3U8
@@ -1536,6 +1573,7 @@
       function parseM3U8(rawText) {
         const lines = rawText.split(/\r?\n/);
         const channels = [];
+        const seenUrls = new Set();
         let pending = null;
         const attrRegex = /([a-zA-Z0-9_-]+)\s*=\s*"([^"]*)"/g;
 
@@ -1562,6 +1600,8 @@
             const grp = line.slice(8).trim();
             if (grp && pending.group === 'Geral') pending.group = grp;
           } else if (!line.startsWith('#') && /^https?:\/\//i.test(line)) {
+            if (seenUrls.has(line)) { pending = null; continue; }
+            seenUrls.add(line);
             const meta = pending || { name: `Stream #${channels.length + 1}`, tvgName: '', logo: '', group: 'Geral' };
             const host = extractHostname(line);
             if (host && isIpAddress(host) && !state.hostHealthMap.has(host)) {
@@ -1650,28 +1690,23 @@
         const host = extractHostname(url);
         state.currentPlaylist = { id: 'custom-url', name: host || 'Lista Externa', file: '', url };
         dom.currentPlaylistName.textContent = state.currentPlaylist.name;
-        dom.channelCounter.textContent = 'Validando DNS e baixando...';
+        dom.channelCounter.textContent = 'Baixando playlist...';
         renderPlaylistPills();
         resetCatalogUi();
 
         try {
-          if (host && !isIpAddress(host)) {
-            const dnsRes = await resolveDns(host, 'A');
-            if (dnsRes.statusCode === 3) throw new Error(`O domínio "${host}" não existe (DNS NXDOMAIN).`);
-          }
-          const resp = await fetch(url);
-          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-          const text = await resp.text();
+          const text = await fetchPlaylistText(url, null, 12000);
+          if (seq !== state.playlistLoadSeq) return;
           const parsed = parseM3U8(text);
           if (!parsed.length) throw new Error('Nenhum stream válido encontrado nesta URL.');
-          if (seq !== state.playlistLoadSeq) return;
-
           state.allChannels = parsed;
           dom.listLoadingState.classList.add('hidden');
-          dom.cdnOriginStatus.textContent = `Origem direta externa: ${host}`;
+          dom.cdnOriginStatus.textContent = 'Origem externa direta: ' + host;
           buildCategoryChips();
           applyFiltersAndRender();
-          showToast(`${parsed.length.toLocaleString('pt-BR')} itens importados com sucesso!`, 'success');
+          showToast(parsed.length.toLocaleString('pt-BR') + ' itens importados!', 'success');
+          // Diagnóstico paralelo, sem impedir importação funcional.
+          if (host && !isIpAddress(host)) resolveDns(host, 'A').catch(() => {});
         } catch (err) {
           if (seq !== state.playlistLoadSeq) return;
           state.allChannels = [];
@@ -1680,13 +1715,15 @@
           dom.channelCounter.textContent = 'Erro ao importar';
           dom.listEmptyState.classList.remove('hidden');
           dom.emptyStateTitle.textContent = 'Falha ao importar URL externa';
-          dom.emptyStateDesc.textContent = (err.message && !/Failed to fetch/i.test(err.message))
-            ? err.message
-            : 'O servidor remoto pode não permitir CORS no navegador. Baixe o arquivo .m3u8 e importe localmente.';
+          dom.emptyStateDesc.textContent = /fetch|cors|network|abort/i.test(err.message)
+            ? 'O servidor não permitiu leitura CORS, a conexão falhou ou expirou. Baixe a lista e importe o arquivo localmente.'
+            : err.message;
           dom.retryPlaylistBtn.classList.add('hidden');
-          showToast('Erro ao importar lista externa (CORS ou DNS).', 'error');
+          showToast('Erro ao importar lista externa.', 'error');
         }
       }
+
+
 
       function loadLocalPlaylistText(name, rawText) {
         stopBatchAuditIfRunning();
@@ -1696,6 +1733,7 @@
         renderPlaylistPills();
         resetCatalogUi();
 
+        if (rawText.length > MAX_PLAYLIST_BYTES) { showToast("Lista local excede o limite de 12 MB.", "error"); dom.listLoadingState.classList.add("hidden"); return; }
         const parsed = parseM3U8(rawText);
         state.allChannels = parsed;
         dom.listLoadingState.classList.add('hidden');
@@ -1773,10 +1811,10 @@
         const info = state.hostHealthMap.get(host);
         if (!info) return '<span class="w-2 h-2 rounded-full bg-slate-500/45 flex-shrink-0" title="DNS não auditado ainda"></span>';
         if (info.ok) {
-          const label = info.isDirectIp ? 'IP Direto Ativo' : `DNS Ativo (${info.ip || info.status})`;
+          const label = info.isDirectIp ? 'IP literal (serviço não testado)' : `DNS resolvido (${info.ip || info.status}); stream não testado`;
           return `<span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.85)] flex-shrink-0" title="${escapeHtml(label)}"></span>`;
         }
-        return `<span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)] flex-shrink-0" title="Domínio Offline (${escapeHtml(info.status)})"></span>`;
+        return `<span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)] flex-shrink-0" title="Falha na consulta DNS (${escapeHtml(info.status)})"></span>`;
       }
 
       const FALLBACK_LOGO_SVG = `<svg class="w-5 h-5 text-sec" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.5"/><path d="M16.5 2.5L12 6.5 7.5 2.5"/></svg>`;
@@ -2062,27 +2100,53 @@
         dom.errorTryHttpsBtn.classList.toggle('hidden', !canTryHttps);
       }
 
+      // Biblioteca sob demanda para reduzir o peso da primeira tela (~nenhum JS de vídeo no boot).
+      let hlsLoadPromise = null;
+      function loadHlsLibrary() {
+        if (window.Hls) return Promise.resolve(window.Hls);
+        if (hlsLoadPromise) return hlsLoadPromise;
+        hlsLoadPromise = (async () => {
+          const urls = [
+            'https://cdn.jsdelivr.net/npm/hls.js@1.7.4/dist/hls.min.js',
+            'https://unpkg.com/hls.js@1.7.4/dist/hls.min.js',
+          ];
+          for (const url of urls) {
+            try {
+              await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = url;
+                script.async = true;
+                script.crossOrigin = 'anonymous';
+                const timer = setTimeout(() => { script.remove(); reject(new Error('CDN de HLS demorou a responder')); }, 8500);
+                script.onload = () => { clearTimeout(timer); resolve(); };
+                script.onerror = () => { clearTimeout(timer); script.remove(); reject(new Error('CDN HLS indisponível')); };
+                document.head.appendChild(script);
+              });
+              if (window.Hls) return window.Hls;
+            } catch (err) { console.warn('HLS CDN:', err.message); }
+          }
+          throw new Error('HLS.js indisponível. Verifique bloqueadores de scripts ou a conexão.');
+        })().catch(err => { hlsLoadPromise = null; throw err; });
+        return hlsLoadPromise;
+      }
+
       async function playChannel(channel) {
         if (!channel || !channel.url) return;
-
         const playSeq = ++state.streamPlaybackSeq;
         state.currentChannel = channel;
         state.currentChannelDns = null;
         state.hlsRetryCount = 0;
-
         highlightPlayingCard(channel.url);
         updatePlayerFavIcon();
-
         dom.playerIdleOverlay.classList.add('hidden');
         dom.playerErrorOverlay.classList.add('hidden');
         dom.playerLoadingOverlay.classList.remove('hidden');
         dom.playerTitle.textContent = channel.name;
-        dom.playerGroup.textContent = channel.group || 'IPTV Brasil 2026';
-        dom.playerLoadingText.textContent = 'Executando Pre-flight DNS (A + AAAA + CNAME)...';
+        dom.playerGroup.textContent = channel.group || 'zPLAYER';
+        dom.playerLoadingText.textContent = 'Abrindo stream diretamente na origem...';
         setStreamStatus('buffering');
         destroyCurrentHls();
 
-        // Logo (sem handlers inline)
         dom.playerLogoBox.innerHTML = '';
         const fallbackIcon = '<svg class="w-5 h-5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><path d="M16.5 2.5L12 6.5 7.5 2.5"/></svg>';
         if (channel.logo) {
@@ -2093,103 +2157,102 @@
           img.className = 'w-full h-full object-contain p-1';
           img.addEventListener('error', () => { dom.playerLogoBox.innerHTML = fallbackIcon; }, { once: true });
           dom.playerLogoBox.appendChild(img);
-        } else {
-          dom.playerLogoBox.innerHTML = fallbackIcon;
-        }
+        } else dom.playerLogoBox.innerHTML = fallbackIcon;
+        if (window.innerWidth < 1024) dom.playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        if (window.innerWidth < 1024) {
-          dom.playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-
-        const dnsInfo = await preflightChannelDns(channel.url);
-        if (playSeq !== state.streamPlaybackSeq) return;
-
-        state.currentChannelDns = dnsInfo;
-        updateLiveDnsTelemetryBar(dnsInfo);
-        refreshRenderedHostDots(dnsInfo.host);
-
-        if (!dnsInfo.isDirectIp && (dnsInfo.statusCode === 3 || dnsInfo.statusCode === 2)) {
-          showDiagnosticError(
-            'dns', `Domínio offline via DNS (${dnsInfo.statusText})`,
-            `O servidor DoH (${dnsInfo.resolverName}) retornou ${dnsInfo.statusText} para "${dnsInfo.host}". Esse domínio expirou ou está fora do ar na origem.`
-          );
-          return;
-        }
-
-        const isMixedContent = window.location.protocol === 'https:' && /^http:\/\//i.test(channel.url);
-        dom.playerLoadingText.textContent = 'Conectando diretamente ao stream HLS...';
-        startDirectPlayback(channel.url, isMixedContent, dnsInfo);
+        // A consulta DoH apenas diagnostica: ela não resolve a conexão do vídeo nem bloqueia a reprodução.
+        preflightChannelDns(channel.url).then(info => {
+          if (playSeq !== state.streamPlaybackSeq) return;
+          state.currentChannelDns = info;
+          updateLiveDnsTelemetryBar(info);
+          refreshRenderedHostDots(info.host);
+        }).catch(err => {
+          if (playSeq === state.streamPlaybackSeq) console.info('Diagnóstico DoH indisponível:', err.message);
+        });
+        const mixed = location.protocol === 'https:' && /^http:///i.test(channel.url);
+        void startDirectPlayback(channel.url, mixed);
       }
 
-      function startDirectPlayback(streamUrl, isMixedContent, dnsInfo) {
+      async function startDirectPlayback(streamUrl, isMixedContent) {
+        const playSeq = state.streamPlaybackSeq;
         destroyCurrentHls();
-        const hostLabel = dnsInfo?.host || extractHostname(streamUrl);
-        const ipLabel = dnsInfo?.ipv4?.[0] || dnsInfo?.ipv6?.[0] || 'ativo';
-        const isDirectMedia = /\.(mp4|mkv|webm|mov|ogg)(\?|$)/i.test(streamUrl);
-
-        if (isDirectMedia) {
+        if (isMixedContent) {
+          showDiagnosticError('mixed', 'HTTP bloqueado em página HTTPS',
+            'O navegador não permite este stream HTTP nesta origem HTTPS. Use a opção Tentar HTTPS se o servidor oferecer suporte, ou abra em um player externo. DoH não contorna esta restrição.');
+          return;
+        }
+        const directMedia = /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(streamUrl);
+        if (directMedia || dom.video.canPlayType('application/vnd.apple.mpegurl')) {
           dom.video.src = streamUrl;
-          dom.video.play().catch(() => dom.playerLoadingOverlay.classList.add('hidden'));
-          return;
-        }
-
-        if (window.Hls && window.Hls.isSupported()) {
-          const hls = new window.Hls({
-            enableWorker: true, lowLatencyMode: true, maxBufferLength: 24,
-            manifestLoadingTimeOut: 10000, levelLoadingTimeOut: 10000, fragLoadingTimeOut: 12000,
-          });
-          state.hlsInstance = hls;
-          hls.loadSource(streamUrl);
-          hls.attachMedia(dom.video);
-
-          hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-            dom.video.play().catch(() => dom.playerLoadingOverlay.classList.add('hidden'));
-          });
-
-          hls.on(window.Hls.Events.ERROR, (event, data) => {
-            if (!data.fatal) return;
-
-            if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR && state.hlsRetryCount < 2) {
-              state.hlsRetryCount++;
-              showToast('Recuperando decodificação de mídia...', 'info');
-              hls.recoverMediaError();
-              return;
+          dom.video.play().catch(() => {
+            if (playSeq === state.streamPlaybackSeq) {
+              dom.playerLoadingOverlay.classList.add('hidden');
+              showToast('Use o botão Reproduzir para iniciar o vídeo.', 'info');
             }
-            if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR && state.hlsRetryCount < 1 && !isMixedContent) {
-              state.hlsRetryCount++;
-              dom.playerLoadingText.textContent = 'Reconectando stream (tentativa automática)...';
-              hls.startLoad();
-              return;
-            }
-
-            if (isMixedContent) {
-              showDiagnosticError('mixed', 'Bloqueio de Conteúdo Misto (HTTP em HTTPS)',
-                `O DNS de "${hostLabel}" está ativo (${ipLabel}), mas este canal usa "http://" e navegadores bloqueiam HTTP dentro de páginas HTTPS. Tente a opção HTTPS ou copie o link para abrir no VLC ou TiviMate.`);
-              return;
-            }
-
-            const httpCode = data.response ? data.response.code : 0;
-            if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR && !httpCode) {
-              showDiagnosticError('cors', 'Bloqueio CORS ou Servidor sem Resposta',
-                `O DNS de "${hostLabel}" resolveu corretamente (${ipLabel}), porém o servidor de origem não envia cabeçalhos CORS (Access-Control-Allow-Origin) ou recusou a conexão no navegador. Copie o link para reproduzir no VLC/TiviMate.`);
-              return;
-            }
-
-            showDiagnosticError('media',
-              httpCode ? `Servidor do canal retornou HTTP ${httpCode}` : 'Falha de rede ou decodificação',
-              `Detalhe técnico: ${data.details || 'Erro fatal no stream'}. Você pode tentar recarregar o sinal ou abrir a URL diretamente em um player nativo.`);
           });
           return;
         }
-
-        if (dom.video.canPlayType('application/vnd.apple.mpegurl')) {
-          dom.video.src = streamUrl;
-          dom.video.play().catch(() => dom.playerLoadingOverlay.classList.add('hidden'));
+        let Hls;
+        try {
+          dom.playerLoadingText.textContent = 'Preparando motor HLS no navegador...';
+          Hls = await loadHlsLibrary();
+        } catch (error) {
+          if (playSeq === state.streamPlaybackSeq) showDiagnosticError('media', 'Biblioteca HLS indisponível', error.message);
           return;
         }
-
-        showDiagnosticError('media', 'HLS não suportado', 'Seu navegador não suporta reprodução de streams .m3u8.');
+        if (playSeq !== state.streamPlaybackSeq) return;
+        if (!Hls.isSupported()) {
+          showDiagnosticError('media', 'HLS incompatível', 'Este navegador não oferece MediaSource para o stream e não tem reprodução HLS nativa.');
+          return;
+        }
+        const hls = new Hls({
+          enableWorker: true, lowLatencyMode: true, capLevelToPlayerSize: true,
+          backBufferLength: 30, maxBufferLength: 30, maxBufferSize: 50 * 1024 * 1024,
+          liveSyncDurationCount: 3, liveMaxLatencyDurationCount: 10,
+        });
+        state.hlsInstance = hls;
+        let networkRetries = 0;
+        let mediaRetries = 0;
+        hls.on(Hls.Events.MEDIA_ATTACHED, () => {
+          if (playSeq === state.streamPlaybackSeq) hls.loadSource(streamUrl);
+        });
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          if (playSeq !== state.streamPlaybackSeq) return;
+          dom.playerLoadingText.textContent = 'Iniciando reprodução...';
+          dom.video.play().catch(() => {
+            if (playSeq === state.streamPlaybackSeq) {
+              dom.playerLoadingOverlay.classList.add('hidden');
+              showToast('Clique em Reproduzir para iniciar.', 'info');
+            }
+          });
+        });
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (!data.fatal || playSeq !== state.streamPlaybackSeq) return;
+          if (data.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRetries++ < 2) {
+            dom.playerLoadingText.textContent = 'Recuperando decodificação...';
+            hls.recoverMediaError();
+            return;
+          }
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && networkRetries++ < 2) {
+            dom.playerLoadingText.textContent = 'Reconectando à origem do canal...';
+            setTimeout(() => {
+              if (playSeq === state.streamPlaybackSeq && state.hlsInstance === hls) hls.startLoad();
+            }, 800 * networkRetries);
+            return;
+          }
+          const code = data.response?.code || data.response?.status || 0;
+          if (data.type === Hls.ErrorTypes.NETWORK_ERROR && !code) {
+            showDiagnosticError('cors', 'Stream inacessível no navegador',
+              'A origem recusou a conexão, não respondeu ou bloqueou as requisições HLS por CORS. O diagnóstico DNS não remove essas restrições. Copie a URL para um aplicativo externo se necessário.');
+          } else {
+            showDiagnosticError('media', code ? 'Servidor retornou HTTP ' + code : 'Falha de decodificação',
+              'Detalhe técnico: ' + (data.details || 'Erro fatal na reprodução') + '. Tente recarregar o sinal.');
+          }
+        });
+        hls.attachMedia(dom.video);
       }
+
+
 
       function highlightPlayingCard(url) {
         dom.channelList.querySelectorAll('.channel-card.playing').forEach(el => el.classList.remove('playing'));
@@ -2204,7 +2267,7 @@
          LOOKUP MANUAL
          ====================================================================== */
       async function runManualLookup(domainRaw, type) {
-        const domain = domainRaw.trim().toLowerCase().replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
+        const domain = extractHostname(/^https?:\/\//i.test(domainRaw.trim()) ? domainRaw.trim() : 'https://' + domainRaw.trim());
         if (!domain) return;
 
         dom.lookupSubmitBtn.disabled = true;
@@ -2270,7 +2333,7 @@
           dom.iconPause.classList.add('hidden');
         });
         v.addEventListener('waiting', () => {
-          if (state.currentChannel && !dom.playerErrorOverlay.classList.contains('hidden') === false) {
+          if (state.currentChannel && dom.playerErrorOverlay.classList.contains('hidden')) {
             dom.playerLoadingOverlay.classList.remove('hidden');
             setStreamStatus('buffering');
           }
@@ -2282,7 +2345,7 @@
           if (isMixed) {
             showDiagnosticError('mixed', 'Bloqueio Mixed Content (HTTP)', 'Streams HTTP diretos são bloqueados em páginas HTTPS. Tente HTTPS ou copie o link para abrir no VLC ou TiviMate.');
           } else {
-            showDiagnosticError('cors', 'Erro ao reproduzir mídia direta', 'O servidor de mídia bloqueou o acesso CORS ou o arquivo está indisponível. Tente copiar o link para um player externo.');
+            showDiagnosticError('cors', 'Erro ao reproduzir mídia direta', 'O servidor de mídia está indisponível, recusou a conexão ou não oferece formato compatível. Tente copiar o link para um player externo.');
           }
         });
         v.addEventListener('volumechange', () => {
@@ -2443,7 +2506,7 @@
           setStreamStatus('buffering');
           state.hlsRetryCount = 0;
           showToast('Tentando reprodução segura via HTTPS...', 'info');
-          startDirectPlayback(httpsUrl, false, state.currentChannelDns || { host: state.currentChannel.host, ipv4: [], ipv6: [] });
+          void startDirectPlayback(httpsUrl, false);
         });
         dom.errorCopyBtn.addEventListener('click', () => {
           if (state.currentChannel) copyToClipboard(state.currentChannel.url, 'URL copiada! Cole no VLC ou TiviMate.');
@@ -2473,7 +2536,7 @@
           if (selectBtn) {
             state.activeDohId = selectBtn.dataset.selectDoh;
             renderDohViews();
-            showToast(`Resolver DNS alterado para ${getActiveDohProvider().name}`, 'success');
+            showToast(`API de diagnóstico DoH: ${getActiveDohProvider().name} (não altera DNS do navegador)`, 'success');
           }
         });
 
@@ -2588,7 +2651,9 @@
         updateCacheStatsUi();
         bindVideoEvents();
         bindUiEvents();
-        runBootDnsHandshake();
+        // A interface e o catálogo não dependem da disponibilidade de DoH.
+        enterMainApp();
+        void runBootDnsHandshake().catch(err => console.info("Benchmark DoH:", err));
       }
 
       if (document.readyState === 'loading') {
