@@ -2182,7 +2182,7 @@
           return;
         }
         const directMedia = /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(streamUrl);
-        if (directMedia || dom.video.canPlayType('application/vnd.apple.mpegurl')) {
+        if (directMedia || (dom.video.canPlayType('application/vnd.apple.mpegurl') && /Safari/i.test(navigator.userAgent) && !/Chrome|Chromium|CriOS|Edg/i.test(navigator.userAgent))) {
           dom.video.src = streamUrl;
           dom.video.play().catch(() => {
             if (playSeq === state.streamPlaybackSeq) {
