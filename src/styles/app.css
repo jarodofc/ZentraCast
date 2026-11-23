@@ -48,7 +48,7 @@
     }
 
     html, body { background: var(--bg-base); color: var(--text-primary); }
-    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif; min-height: 100vh; }
+    body { font-family: "Manrope", -apple-system, BlinkMacSystemFont, system-ui, sans-serif; min-height: 100vh; letter-spacing: -.012em; }
 
     .text-sec { color: var(--text-secondary); }
     .text-ter { color: var(--text-tertiary); }
@@ -253,3 +253,184 @@
       .gh-island:hover .gh-island-expand, .gh-island:focus-visible .gh-island-expand, .gh-island.is-expanded .gh-island-expand { max-width: 175px; }
     }
     @media print { .gh-island-dock { display: none !important; } }
+
+
+/* ========================================================================
+   ZENTRACAST / minimal glass identity
+   Design tokens preserve dark, light, solid and reduced-transparency modes.
+   ======================================================================== */
+:root {
+  --bg-base: #0B111B;
+  --text-primary: #F5F7FB;
+  --text-secondary: #A6B2C2;
+  --text-tertiary: #7B889B;
+  --glass-bg: rgba(22, 30, 43, .82);
+  --glass-bg-elevated: rgba(26, 35, 49, .92);
+  --glass-solid: #151E2B;
+  --glass-solid-elevated: #1B2635;
+  --glass-border: rgba(206, 220, 238, .12);
+  --glass-specular: rgba(255,255,255,.10);
+  --glass-shadow: 0 14px 38px -25px rgba(0,0,0,.58);
+  --glass-tint: var(--glass-bg);
+  --glass-blur: 14px;
+  --glass-edge: var(--glass-border);
+  --card-bg: rgba(176,194,220,.045);
+  --card-bg-hover: rgba(176,194,220,.085);
+  --input-bg: rgba(10,18,29,.48);
+  --accent: #83AEFF;
+  --accent-2: #80D7D0;
+  --action-bg: #9AB9FF;
+  --action-fg: #101A2C;
+  --focus-ring: rgba(131,174,255,.25);
+}
+html.light {
+  --bg-base: #F5F7FA;
+  --text-primary: #152131;
+  --text-secondary: #576478;
+  --text-tertiary: #748296;
+  --glass-bg: rgba(255,255,255,.83);
+  --glass-bg-elevated: rgba(255,255,255,.94);
+  --glass-solid: #FFFFFF;
+  --glass-solid-elevated: #F9FAFC;
+  --glass-border: rgba(31,46,69,.12);
+  --glass-specular: rgba(255,255,255,.96);
+  --glass-shadow: 0 14px 30px -22px rgba(26,43,64,.20);
+  --card-bg: rgba(26,43,64,.035);
+  --card-bg-hover: rgba(26,43,64,.075);
+  --input-bg: rgba(226,232,241,.42);
+  --accent: #355FCE;
+  --accent-2: #087A75;
+  --action-bg: #355FCE;
+  --action-fg: #FFFFFF;
+  --focus-ring: rgba(53,95,206,.20);
+}
+html, body { background-color: var(--bg-base); color: var(--text-primary); }
+.ambient-mesh {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(70% 48% at 55% -8%, rgba(115,150,214,.095), transparent 78%), var(--bg-base);
+}
+html.light .ambient-mesh {
+  background: radial-gradient(70% 48% at 55% -8%, rgba(104,135,192,.08), transparent 78%), var(--bg-base);
+}
+.liquid-glass {
+  background: var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.05);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.05);
+  border-color: var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-specular), var(--glass-shadow);
+}
+.liquid-glass-elevated {
+  background: var(--glass-bg-elevated);
+  backdrop-filter: blur(18px) saturate(1.05);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+  border-color: var(--glass-border);
+  box-shadow: inset 0 1px 0 var(--glass-specular), var(--glass-shadow);
+}
+:where(h1, h2, h3) { letter-spacing: -.035em; }
+.brand-mark {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: #121C2A;
+  border: 1px solid rgba(205,222,249,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  border-radius: 15px;
+}
+.brand-mark--small { width: 42px; height: 42px; }
+.brand-mark--large { width: 58px; height: 58px; border-radius: 19px; }
+.brand-mark img { display: block; width: 70%; height: 70%; object-fit: contain; }
+.brand-wordmark {
+  font-family: "Manrope", sans-serif;
+  font-weight: 800;
+  font-size: 1.09rem;
+  line-height: 1.25;
+  letter-spacing: -.065em;
+  color: var(--text-primary);
+}
+.brand-wordmark--large { font-size: clamp(1.35rem, 3vw, 1.6rem); }
+.brand-wordmark span { color: var(--accent); }
+.brand-edition {
+  font: 500 .62rem/1.2 "IBM Plex Mono", ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--text-secondary);
+}
+.brand-header-dot { display: none; }
+.font-mono, .gh-island-url { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+#app-shell > header { border-bottom: 1px solid var(--glass-border); box-shadow: 0 4px 24px rgba(0,0,0,.035); }
+#boot-gate { background: rgba(6,11,20,.70); }
+#boot-progress-bar, #batch-audit-bar { background-image: none !important; background-color: var(--accent) !important; }
+.m3-btn[class*="bg-gradient-to"] {
+  background-image: none !important;
+  background-color: var(--action-bg) !important;
+  color: var(--action-fg) !important;
+  border: 1px solid transparent;
+  box-shadow: none !important;
+}
+.m3-btn[class*="bg-gradient-to"]:hover { filter: brightness(1.055); }
+.m3-btn { transition: background-color .18s ease, border-color .18s ease, opacity .18s ease, transform .18s ease; }
+.m3-pill.active { background: var(--action-bg); color: var(--action-fg); border-color: transparent; box-shadow: none; }
+.channel-card.playing {
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.channel-card, .m3-pill, .themed-input { box-shadow: none; }
+.m3-pill:hover { border-color: color-mix(in srgb, var(--accent) 32%, var(--glass-border)); }
+.themed-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
+.ios-switch.on { background: var(--accent); }
+.m3-btn:focus-visible,
+.m3-pill:focus-visible,
+.gh-island:focus-visible,
+button:focus-visible,
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.player-empty-state { background: linear-gradient(160deg, #101927 0%, #101D2D 100%); }
+.player-empty-icon { background: rgba(255,255,255,.055); border-color: rgba(255,255,255,.12); box-shadow: none; }
+.player-wrapper { box-shadow: 0 8px 26px rgba(0,0,0,.22); }
+#stream-status-badge, #stream-dns-pill {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+/* GitHub footer link is intentionally secondary to the video experience. */
+.gh-island-dock { bottom: 12px; opacity: .88; }
+.gh-island,
+html.light .gh-island,
+html.solid-mode .gh-island,
+html.light.solid-mode .gh-island {
+  height: 36px;
+  min-width: 0;
+  padding: 5px 10px;
+  transform: none !important;
+  background: var(--glass-solid) !important;
+  color: var(--text-secondary);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 4px 14px rgba(0,0,0,.13);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.gh-island:hover, .gh-island:focus-visible, .gh-island.is-expanded {
+  padding: 5px 10px;
+  transform: none !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,.15);
+  border-color: var(--glass-border);
+}
+.gh-island::before, .gh-island-expand, .gh-island-dot { display: none !important; }
+.gh-island-handle { font-size: .7rem; color: var(--text-secondary); font-weight: 600; }
+.gh-island-icon-wrap { width: 25px; height: 25px; background: var(--card-bg); border-color: var(--glass-border); }
+.gh-island-icon-wrap svg { color: var(--text-secondary); }
+.gh-island:hover .gh-island-icon-wrap, .gh-island:focus-visible .gh-island-icon-wrap {
+  transform: none; background: var(--card-bg-hover); border-color: var(--glass-border);
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass, .liquid-glass-elevated { background: var(--glass-solid) !important; }
+}
