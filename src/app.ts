@@ -904,7 +904,7 @@ import { loadHlsLibrary } from './player/hls-loader';
           const castRow = document.createElement('button');
           castRow.type = 'button';
           castRow.dataset.wvcIndex = String(i);
-          castRow.textContent = '📺';
+          castRow.innerHTML = '<svg class="w-4 h-4" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="13" rx="2"/><path d="M3.5 20a5 5 0 0 1 5 0M3.5 16a9 9 0 0 1 9 4"/><circle cx="3.5" cy="20" r=".8" fill="currentColor" stroke="none"/></svg>';
           castRow.title = 'Abrir no Web Video Caster';
           castRow.setAttribute('aria-label', 'Abrir no Web Video Caster');
           castRow.className = 'm3-btn w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 hover:bg-cyan-500/20';
@@ -1780,7 +1780,7 @@ import { loadHlsLibrary } from './player/hls-loader';
         const url = URL.createObjectURL(blob);
         const anchor = document.createElement('a');
         anchor.href = url;
-        anchor.download = 'zplayer-' + String(state.currentPlaylist?.id || 'lista').replace(/[^a-z0-9-]/gi, '') + '.m3u';
+        anchor.download = 'zentracast-' + String(state.currentPlaylist?.id || 'lista').replace(/[^a-z0-9-]/gi, '') + '.m3u';
         document.body.appendChild(anchor);
         anchor.click();
         anchor.remove();
@@ -1802,9 +1802,9 @@ import { loadHlsLibrary } from './player/hls-loader';
         const button = document.createElement('button');
         button.id = 'ctrl-wvc-btn';
         button.type = 'button';
-        button.textContent = '📺 WVC';
+        button.innerHTML = '<svg class="w-4 h-4" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="13" rx="2"/><path d="M3.5 20a5 5 0 0 1 5 0M3.5 16a9 9 0 0 1 9 4"/><circle cx="3.5" cy="20" r=".8" fill="currentColor" stroke="none"/></svg><span>Cast</span>';
         button.title = 'Abrir canal no Web Video Caster';
-        button.className = 'm3-btn h-9 px-2.5 rounded-xl text-[11px] font-bold bg-gradient-to-r from-cyan-600 to-indigo-600 text-white';
+        button.className = 'cast-action m3-btn inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-[11px] font-semibold';
         dom.ctrlExternalBtn.before(button);
         button.addEventListener('click', () => {
           if (state.currentChannel) openInWebVideoCaster(state.currentChannel);
@@ -1813,8 +1813,8 @@ import { loadHlsLibrary } from './player/hls-loader';
         const errorButton = document.createElement('button');
         errorButton.id = 'error-wvc-btn';
         errorButton.type = 'button';
-        errorButton.textContent = '📺 Abrir no WVC';
-        errorButton.className = 'm3-btn px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-cyan-600 to-indigo-600 text-white';
+        errorButton.innerHTML = '<svg class="w-4 h-4" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="13" rx="2"/><path d="M3.5 20a5 5 0 0 1 5 0M3.5 16a9 9 0 0 1 9 4"/><circle cx="3.5" cy="20" r=".8" fill="currentColor" stroke="none"/></svg><span>Enviar ao WVC</span>';
+        errorButton.className = 'cast-action m3-btn inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold';
         dom.errorCopyBtn.before(errorButton);
         errorButton.addEventListener('click', () => {
           if (state.currentChannel) openInWebVideoCaster(state.currentChannel);
@@ -1822,7 +1822,7 @@ import { loadHlsLibrary } from './player/hls-loader';
         const panel = document.createElement('div');
         panel.id = 'wvc-action-panel';
         panel.className = 'mt-3 px-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 justify-between text-xs';
-        panel.innerHTML = '<p class="text-sec text-[11px] flex-1">📺 <strong>Web Video Caster:</strong> abra esta página no navegador do app ou toque em WVC no canal. A TV precisa suportar o codec e a origem.</p>' +
+        panel.innerHTML = '<p class="text-sec text-[11px] flex-1"><strong>Web Video Caster</strong> · Abra o app no celular ou use Cast no canal. A TV precisa suportar o formato da origem.</p>' +
           '<div class="flex gap-2 flex-wrap"><button id="wvc-share-btn" type="button" class="m3-pill rounded-full px-3 py-2 font-semibold">Compartilhar canal</button>' +
           '<button id="wvc-export-btn" type="button" class="m3-pill rounded-full px-3 py-2 font-semibold">Exportar M3U</button></div>';
         dom.playerWrapper.parentElement.appendChild(panel);
@@ -1833,6 +1833,7 @@ import { loadHlsLibrary } from './player/hls-loader';
           sourceIds: () => OFFICIAL_PLAYLISTS.map(x => x.id),
           loadedChannelCount: () => state.allChannels.length,
         });
+        window.zentraCastTools = window.zPlayerTools;
       }
 
       /* ======================================================================
