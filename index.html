@@ -979,6 +979,7 @@
         onlyActiveDns: false,
         searchQuery: '',
         playlistLoadSeq: 0,
+        extraCatalogs: [],
 
         favorites: loadJsonStorage(STORAGE_KEYS.FAVORITES, {}),
         currentChannel: null,
@@ -1526,8 +1527,31 @@
           if (!response.ok) throw new Error('HTTP ' + response.status);
           const length = Number(response.headers.get('content-length') || 0);
           if (length > MAX_PLAYLIST_BYTES) throw new Error('Lista excede 12 MB');
-          const text = await response.text();
-          if (text.length > MAX_PLAYLIST_BYTES || !/^\s*#EXTM3U|#EXTINF:/m.test(text)) {
+          // Leitura incremental: bloqueia listas acima de 12 MB mesmo sem Content-Length.
+          let text = '';
+          if (response.body && response.body.getReader) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let received = 0;
+            try {
+              while (true) {
+                const part = await reader.read();
+                if (part.done) break;
+                received += part.value.byteLength;
+                if (received > MAX_PLAYLIST_BYTES) {
+                  await reader.cancel();
+                  throw new Error('Playlist excedeu o limite de 12 MB');
+                }
+                text += decoder.decode(part.value, { stream: true });
+              }
+              text += decoder.decode();
+            } finally {
+              try { reader.releaseLock(); } catch {}
+            }
+          } else {
+            text = await response.text();
+          }
+          if (text.length > MAX_PLAYLIST_BYTES || !/^\\s*#EXTM3U|#EXTINF:/m.test(text)) {
             throw new Error('Playlist M3U inválida ou grande demais');
           }
           return text;
@@ -1606,7 +1630,18 @@
               tvgName: attrs['tvg-name'] || '',
               logo: safeImageUrl(attrs['tvg-logo']),
               group: attrs['group-title'] || 'Geral',
+              subtitle: safeImageUrl(attrs['tvg-subtitle'] || ''),
+              headers: {},
             };
+          } else if (line.startsWith('#EXTVLCOPT:') && pending) {
+            const opt = line.slice(11);
+            const separator = opt.indexOf('=');
+            if (separator > 0) {
+              const key = opt.slice(0, separator).trim().toLowerCase();
+              const value = opt.slice(separator + 1).trim().replace(/[\r\n]/g, '');
+              if (key === 'http-referrer' && value.length <= 512 && /^https?:\/\//i.test(value)) pending.headers.Referer = value;
+              if (key === 'http-user-agent' && value.length <= 200) pending.headers['User-Agent'] = value;
+            }
           } else if (line.startsWith('#EXTGRP:') && pending) {
             const grp = line.slice(8).trim();
             if (grp && pending.group === 'Geral') pending.group = grp;
@@ -1621,7 +1656,7 @@
             channels.push({
               id: `${channels.length}_${line}`,
               name: meta.name, tvgName: meta.tvgName, logo: meta.logo, group: meta.group || 'Geral',
-              url: line, host,
+              url: line, host, subtitle: meta.subtitle || '', headers: meta.headers || {},
               searchKey: `${meta.name} ${meta.tvgName} ${meta.group} ${host}`.toLowerCase(),
             });
             pending = null;
@@ -1712,6 +1747,7 @@
           const parsed = parseM3U8(text);
           if (!parsed.length) throw new Error('Nenhum stream válido encontrado nesta URL.');
           state.allChannels = parsed;
+          state.extraCatalogs = [...state.extraCatalogs.filter(x => x.name !== state.currentPlaylist.name), { name: state.currentPlaylist.name, channels: parsed }].slice(-4);
           dom.listLoadingState.classList.add('hidden');
           dom.cdnOriginStatus.textContent = 'Origem externa direta: ' + host;
           buildCategoryChips();
@@ -1748,6 +1784,7 @@
         if (rawText.length > MAX_PLAYLIST_BYTES) { showToast("Lista local excede o limite de 12 MB.", "error"); dom.listLoadingState.classList.add("hidden"); return; }
         const parsed = parseM3U8(rawText);
         state.allChannels = parsed;
+        state.extraCatalogs = [...state.extraCatalogs.filter(x => x.name !== name), { name, channels: parsed }].slice(-4);
         dom.listLoadingState.classList.add('hidden');
         dom.cdnOriginStatus.textContent = `Arquivo local: ${name}`;
         buildCategoryChips();
@@ -2748,6 +2785,15 @@
         }
         await Promise.all(Array.from({ length: Math.min(sources.length, 3) }, worker));
         if (seq !== state.playlistLoadSeq) return;
+        // Inclui listas próprias importadas nesta sessão, sem publicar URLs privadas no GitHub.
+        for (const custom of state.extraCatalogs) {
+          for (const ch of custom.channels) {
+            if (channels.length >= 30000) break;
+            if (seen.has(ch.url)) continue;
+            seen.add(ch.url);
+            channels.push({ ...ch, source: custom.name });
+          }
+        }
         state.allChannels = channels;
         dom.listLoadingState.classList.add('hidden');
         dom.cdnOriginStatus.textContent = successes.length + '/' + sources.length + ' fontes • ' + channels.length.toLocaleString('pt-BR') + ' URLs únicas';
