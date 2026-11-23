@@ -3,6 +3,7 @@
 // são TypeScript estrito e testáveis. A migração de DOM será incremental.
 import { OFFICIAL_PLAYLISTS, CDN_MIRRORS } from './iptv/catalogs';
 import { parseM3U8 as parseM3U8Typed, serializeM3U } from './iptv/m3u';
+import { parseM3UAsync } from './iptv/parse-worker';
 import { fetchPlaylistWithFailover, fetchPlaylistText, MAX_PLAYLIST_BYTES } from './network/playlist';
 import { buildWebVideoCasterUrl } from './cast/web-video-caster';
 import { loadHlsLibrary } from './player/hls-loader';
@@ -639,12 +640,18 @@ import { loadHlsLibrary } from './player/hls-loader';
       /* ======================================================================
          PARSER M3U / M3U8
          ====================================================================== */
+      function recordDirectIp(host) {
+        if (!state.hostHealthMap.has(host)) {
+          state.hostHealthMap.set(host, { ok: true, status: 'IP Direto', ip: host, isDirectIp: true });
+        }
+      }
+
       function parseM3U8(rawText) {
-        return parseM3U8Typed(rawText, (host) => {
-          if (!state.hostHealthMap.has(host)) {
-            state.hostHealthMap.set(host, { ok: true, status: 'IP Direto', ip: host, isDirectIp: true });
-          }
-        });
+        return parseM3U8Typed(rawText, recordDirectIp);
+      }
+
+      async function parseM3U8Async(rawText) {
+        return parseM3UAsync(rawText, recordDirectIp);
       }
 
       /* ======================================================================
@@ -690,7 +697,8 @@ import { loadHlsLibrary } from './player/hls-loader';
         try {
           const { text, mirror } = await fetchPlaylistSource(playlistObj);
           if (seq !== state.playlistLoadSeq) return;
-          const parsed = parseM3U8(text);
+          const parsed = await parseM3U8Async(text);
+          if (seq !== state.playlistLoadSeq) return;
           state.allChannels = parsed;
           dom.listLoadingState.classList.add('hidden');
           dom.cdnOriginStatus.textContent = `Origem direta: ${mirror.label} • ${playlistObj.file}`;
@@ -726,7 +734,8 @@ import { loadHlsLibrary } from './player/hls-loader';
         try {
           const text = await fetchPlaylistText(url, null, 12000);
           if (seq !== state.playlistLoadSeq) return;
-          const parsed = parseM3U8(text);
+          const parsed = await parseM3U8Async(text);
+          if (seq !== state.playlistLoadSeq) return;
           if (!parsed.length) throw new Error('Nenhum stream válido encontrado nesta URL.');
           state.allChannels = parsed;
           state.extraCatalogs = [...state.extraCatalogs.filter(x => x.name !== state.currentPlaylist.name), { name: state.currentPlaylist.name, channels: parsed }].slice(-4);
@@ -755,16 +764,17 @@ import { loadHlsLibrary } from './player/hls-loader';
 
 
 
-      function loadLocalPlaylistText(name, rawText) {
+      async function loadLocalPlaylistText(name, rawText) {
         stopBatchAuditIfRunning();
-        state.playlistLoadSeq++;
+        const seq = ++state.playlistLoadSeq;
         state.currentPlaylist = { id: 'custom-local', name, file: '' };
         dom.currentPlaylistName.textContent = name;
         renderPlaylistPills();
         resetCatalogUi();
 
         if (rawText.length > MAX_PLAYLIST_BYTES) { showToast("Lista local excede o limite de 12 MB.", "error"); dom.listLoadingState.classList.add("hidden"); return; }
-        const parsed = parseM3U8(rawText);
+        const parsed = await parseM3U8Async(rawText);
+        if (seq !== state.playlistLoadSeq) return;
         state.allChannels = parsed;
         state.extraCatalogs = [...state.extraCatalogs.filter(x => x.name !== name), { name, channels: parsed }].slice(-4);
         dom.listLoadingState.classList.add('hidden');
@@ -1694,7 +1704,8 @@ import { loadHlsLibrary } from './player/hls-loader';
             try {
               const response = await fetchPlaylistSource(src);
               if (seq !== state.playlistLoadSeq) return;
-              const parsed = parseM3U8(response.text);
+              const parsed = await parseM3U8Async(response.text);
+              if (seq !== state.playlistLoadSeq) return;
               for (const ch of parsed) {
                 if (channels.length >= 30000) break;
                 if (seen.has(ch.url)) continue;
