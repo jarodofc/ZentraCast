@@ -21,6 +21,8 @@ O protocolo `wvc-x-callback://open` é suportado pelo aplicativo móvel, mas dep
 | `src/app.ts` | TypeScript (controlador legado em migração) | Estado da UI, eventos, favoritos, DoH, telemetria e fluxo de reprodução |
 | `src/types.ts` | TypeScript estrito | Tipos dos canais, listas e cabeçalhos |
 | `src/iptv/m3u.ts` | TypeScript estrito | Parser e exportador M3U |
+| `src/iptv/parse-worker.ts` | TypeScript estrito | Escolhe parser direto ou Web Worker conforme tamanho da lista |
+| `src/workers/m3u.worker.ts` | Web Worker + TypeScript | Processamento de listas grandes fora da thread principal |
 | `src/iptv/catalogs.ts` | TypeScript estrito | Fontes IPTV e espelhos CDN |
 | `src/network/playlist.ts` | TypeScript estrito | Fetch com timeout/limites, failover e cache de listas |
 | `src/player/hls-loader.ts` | TypeScript estrito | HLS.js carregado sob demanda, com fallback em CDN |
@@ -37,7 +39,9 @@ O controlador `src/app.ts` mantém temporariamente `// @ts-nocheck` para preserv
 npm install
 npm run dev         # servidor local (Vite)
 npm run typecheck   # verifica os módulos tipados
-npm run build       # gera a pasta dist/
+npm test            # testes de parser M3U, WVC e failover
+npm run check       # executa testes + TypeScript
+npm run build       # executa check e gera a pasta dist/
 npm run preview     # visualiza o build local
 ```
 
@@ -63,4 +67,4 @@ O catálogo combinado abre até três fontes em paralelo, mostra resultados prog
 
 ## Verificações
 
-O build roda o TypeScript antes da compilação com Vite (`npm run build`). Conferir o status do deploy Vercel após as mudanças. Também é recomendável validar importação local, reprodução HLS, transferência WVC em Android/iOS e codec/áudio na TV real, que não são reproduzíveis apenas por testes de build.
+O build executa testes automatizados em Node.js, checagem TypeScript e compilação com Vite (`npm run build`). Conferir o status do deploy Vercel após as mudanças. Também é recomendável validar importação local, reprodução HLS, transferência WVC em Android/iOS e codec/áudio na TV real, que não são reproduzíveis apenas por testes de build.
