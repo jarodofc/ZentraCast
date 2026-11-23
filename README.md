@@ -1,22 +1,31 @@
-# zPLAYER — IPTV Hub + Web Video Caster
+# ZentraCast — IPTV & Web Video Caster
 
 Player IPTV estático, com múltiplas fontes M3U, diagnóstico DoH e integração com **Web Video Caster**. A aplicação roda **inteiramente no navegador**, com HTML5, CSS3/Tailwind, TypeScript, HLS.js e Vite. Não exige backend, proxy próprio ou token para carregar as fontes públicas configuradas.
 
 ## Abrir e transmitir
 
-1. Acesse [zPLAYER](https://zplayer-alpha.vercel.app/) no navegador do celular ou no navegador integrado do Web Video Caster.
-2. Selecione **📡 Tudo em um**, uma lista individual ou importe uma URL/arquivo M3U.
-3. Escolha um canal. Use **📺 WVC** para abrir o stream no Web Video Caster ou **Compartilhar canal** para enviar a URL por outros aplicativos.
+1. Acesse [ZentraCast](https://zplayer-alpha.vercel.app/) no navegador do celular ou no navegador integrado do Web Video Caster.
+2. Selecione **Tudo em um**, uma lista individual ou importe uma URL/arquivo M3U.
+3. Escolha um canal. Use **Cast** para abrir o stream no Web Video Caster ou **Compartilhar canal** para enviar a URL por outros aplicativos.
 4. Use **Exportar M3U** para salvar o catálogo no seu dispositivo e importá-lo em um player compatível.
 
 O protocolo `wvc-x-callback://open` é suportado pelo aplicativo móvel, mas depende de o sistema operacional permitir o redirecionamento e de o app estar instalado. Consulte a [documentação oficial](https://www.webvideocaster.com/integrations).
+
+## Identidade visual
+
+A marca **ZentraCast** segue uma estética minimalista: superfícies neutras, Liquid Glass discreto, uma única cor de ação e ícones vetoriais. O símbolo original combina a letra **Z** com um pequeno sinal de transmissão.
+
+- Logo e ícone: `public/brand/mark.svg` e `public/favicon.svg`
+- Fonte principal: **Manrope**; fonte técnica: **IBM Plex Mono**
+- Paleta e regras de interface: [BRAND.md](./BRAND.md)
+- Manifesto de instalação: `public/manifest.webmanifest`
 
 ## Arquitetura
 
 | Arquivo/módulo | Linguagem | Responsabilidade |
 |---|---|---|
 | `index.html` | HTML5 | Interface e elementos do player |
-| `src/styles/app.css` | CSS3 + Tailwind | Liquid Glass, temas e responsividade; compilado no build |
+| `src/styles/app.css` | CSS3 + Tailwind | Design system ZentraCast, Liquid Glass sutil, temas e responsividade |
 | `src/main.ts` | TypeScript | Entrada do aplicativo e importação de estilos |
 | `src/app.ts` | TypeScript (controlador legado em migração) | Estado da UI, eventos, favoritos, DoH, telemetria e fluxo de reprodução |
 | `src/types.ts` | TypeScript estrito | Tipos dos canais, listas e cabeçalhos |
