@@ -53,33 +53,11 @@
       --glass-specular: rgba(255, 255, 255, 0.24);
       --glass-shadow: 0 20px 50px -14px rgba(0, 0, 0, 0.62);
 
-      --pill-bg: rgba(255, 255, 255, 0.06);
-      --pill-hover: rgba(255, 255, 255, 0.12);
-      --pill-border: rgba(255, 255, 255, 0.11);
-
-      --card-bg: rgba(255, 255, 255, 0.038);
-      --card-hover: rgba(255, 255, 255, 0.08);
-      --card-border: rgba(255, 255, 255, 0.08);
-
-      --input-bg: rgba(6, 10, 22, 0.52);
-      --input-focus-bg: rgba(6, 10, 22, 0.72);
-      --divider: rgba(255, 255, 255, 0.10);
-
-      --mesh-1: rgba(99, 102, 241, 0.24);
-      --mesh-2: rgba(34, 211, 238, 0.16);
-      --mesh-3: rgba(16, 185, 129, 0.12);
-      --mesh-grad-a: #060913;
-      --mesh-grad-b: #0A1020;
-      --mesh-grad-c: #050811;
-    }
-
-    /* Tokens Modo Claro */
-    html.light {
-      --bg-base: #EEF3FA;
-      --text-primary: #0F172A;
-      --text-secondary: #475569;
-      --text-tertiary: #64748B;
-
+      /* Tokens Liquid Glass (iOS) */
+      --glass-tint: var(--glass-bg);
+      --glass-blur: 22px;
+      --glass-edge: var(--glass-border);
+/* ... existing code ... -->
       --glass-bg: rgba(255, 255, 255, 0.68);
       --glass-bg-elevated: rgba(255, 255, 255, 0.84);
       --glass-solid: #FFFFFF;
@@ -88,275 +66,261 @@
       --glass-specular: rgba(255, 255, 255, 0.92);
       --glass-shadow: 0 18px 42px -14px rgba(15, 23, 42, 0.14);
 
-      --pill-bg: rgba(15, 23, 42, 0.045);
-      --pill-hover: rgba(15, 23, 42, 0.09);
-      --pill-border: rgba(15, 23, 42, 0.10);
-
-      --card-bg: rgba(255, 255, 255, 0.62);
-      --card-hover: rgba(255, 255, 255, 0.92);
-      --card-border: rgba(15, 23, 42, 0.08);
-
-      --input-bg: rgba(255, 255, 255, 0.72);
-      --input-focus-bg: rgba(255, 255, 255, 0.96);
-      --divider: rgba(15, 23, 42, 0.09);
-
-      --mesh-1: rgba(99, 102, 241, 0.18);
-      --mesh-2: rgba(6, 182, 212, 0.16);
-      --mesh-3: rgba(16, 185, 129, 0.12);
-      --mesh-grad-a: #EEF3FA;
-      --mesh-grad-b: #E5EDF8;
-      --mesh-grad-c: #F1F5FB;
-    }
-
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      background-color: var(--bg-base);
-      color: var(--text-primary);
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
-      overflow-x: hidden;
-      min-height: 100vh;
-      transition: background-color 0.28s ease, color 0.28s ease;
-    }
-
-    /* Fundo Gradiente Mesh Tonal */
-    .ambient-mesh {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      background:
-        radial-gradient(circle at 10% 14%, var(--mesh-1) 0%, transparent 44%),
-        radial-gradient(circle at 88% 12%, var(--mesh-2) 0%, transparent 40%),
-        radial-gradient(circle at 50% 90%, var(--mesh-3) 0%, transparent 46%),
-        linear-gradient(180deg, var(--mesh-grad-a) 0%, var(--mesh-grad-b) 55%, var(--mesh-grad-c) 100%);
-      pointer-events: none;
-    }
-
+      /* Tokens Liquid Glass (Modo Claro) */
+      --glass-tint: var(--glass-bg);
+      --glass-blur: 22px;
+      --glass-edge: var(--glass-border);
+/* ... existing code ... -->
     /* Superfícies iOS Liquid Glass */
     .liquid-glass {
-      background: var(--glass-bg);
-      backdrop-filter: blur(22px) saturate(1.8);
-      -webkit-backdrop-filter: blur(22px) saturate(1.8);
-      border: 1px solid var(--glass-border);
+      background: var(--glass-tint);
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
+      border: 1px solid var(--glass-edge);
       box-shadow:
         inset 0 1px 0 0 var(--glass-specular),
         var(--glass-shadow);
     }
-
-    .liquid-glass-elevated {
-      background: var(--glass-bg-elevated);
-      backdrop-filter: blur(28px) saturate(1.9);
-      -webkit-backdrop-filter: blur(28px) saturate(1.9);
-      border: 1px solid var(--glass-border);
-      box-shadow:
-        inset 0 1px 0 0 var(--glass-specular),
-        0 26px 60px -16px rgba(0, 0, 0, 0.38);
-    }
-
-    /* Fallback de Acessibilidade: Modo Sólido (Manual ou Sistema) */
-    html.solid-mode .liquid-glass,
-    html.solid-mode .liquid-glass-elevated,
-    html.solid-mode .m3-pill {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-    }
-    html.solid-mode .liquid-glass {
-      background: var(--glass-solid) !important;
-    }
-    html.solid-mode .liquid-glass-elevated {
-      background: var(--glass-solid-elevated) !important;
-    }
-    html.solid-mode .m3-pill {
-      background: var(--glass-solid-elevated);
-    }
-    html.solid-mode .m3-pill.active {
-      background: linear-gradient(135deg, #4F46E5, #0891B2) !important;
-    }
-
-    @media (prefers-reduced-transparency: reduce) {
-      .liquid-glass,
-      .liquid-glass-elevated,
-      .m3-pill {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-      }
-      .liquid-glass {
-        background: var(--glass-solid);
-      }
-      .liquid-glass-elevated {
-        background: var(--glass-solid-elevated);
-      }
-    }
-
-    /* Componentes Material 3 (Pílulas, Chips e Cartões) */
-    .m3-pill {
-      background: var(--pill-bg);
-      border: 1px solid var(--pill-border);
-      color: var(--text-primary);
-      backdrop-filter: blur(14px) saturate(1.5);
-      -webkit-backdrop-filter: blur(14px) saturate(1.5);
-      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-                  background-color 0.2s ease,
-                  border-color 0.2s ease,
-                  box-shadow 0.2s ease;
-    }
-    .m3-pill:hover {
-      background: var(--pill-hover);
-      transform: translateY(-1px);
-    }
-    .m3-pill:active {
-      transform: scale(0.96);
-    }
-    .m3-pill.active {
-      background: linear-gradient(135deg, #6366F1, #06B6D4);
-      border-color: rgba(255, 255, 255, 0.28);
-      color: #FFFFFF !important;
-      box-shadow:
-        0 8px 22px -6px rgba(99, 102, 241, 0.55),
-        inset 0 1px 0 rgba(255, 255, 255, 0.32);
-    }
-
-    .m3-btn {
-      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease, background-color 0.2s ease;
-    }
-    .m3-btn:active {
-      transform: scale(0.95);
-    }
-
-    .channel-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
-                  background-color 0.2s ease,
-                  border-color 0.2s ease,
-                  box-shadow 0.2s ease;
-    }
-    .channel-card:hover {
-      background: var(--card-hover);
-      border-color: rgba(99, 102, 241, 0.32);
-      transform: translateY(-1px);
-    }
-    .channel-card.playing {
-      background: linear-gradient(135deg, rgba(99, 102, 241, 0.20), rgba(6, 182, 212, 0.14));
-      border-color: rgba(99, 102, 241, 0.62);
-      box-shadow: 0 8px 24px -10px rgba(99, 102, 241, 0.45);
-    }
-
-    .themed-input {
-      background: var(--input-bg);
-      border: 1px solid var(--glass-border);
-      color: var(--text-primary);
-    }
-    .themed-input:focus {
-      background: var(--input-focus-bg);
-      border-color: rgba(99, 102, 241, 0.7);
-      outline: none;
-    }
-    .themed-input::placeholder {
-      color: var(--text-tertiary);
-    }
-
-    .themed-divider {
-      border-color: var(--divider);
-    }
-    .text-sec { color: var(--text-secondary); }
-    .text-ter { color: var(--text-tertiary); }
-
-    /* Switch estilo iOS */
-    .ios-switch {
-      position: relative;
-      width: 44px;
-      height: 26px;
-      border-radius: 999px;
-      background: rgba(148, 163, 184, 0.30);
-      border: 1px solid var(--glass-border);
-      cursor: pointer;
-      transition: background 0.26s cubic-bezier(0.22, 1, 0.36, 1);
-      flex-shrink: 0;
-    }
-    .ios-switch.on {
-      background: linear-gradient(135deg, #10B981, #06B6D4);
-      border-color: rgba(255, 255, 255, 0.25);
-    }
-    .ios-switch::after {
-      content: '';
-      position: absolute;
-      top: 2px;
-      left: 2px;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #FFFFFF;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.28);
-      transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .ios-switch.on::after {
-      transform: translateX(18px);
-    }
-
-    /* Slider de Volume */
-    input[type="range"].ios-slider {
-      -webkit-appearance: none;
-      appearance: none;
-      height: 5px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.24);
-      outline: none;
-      cursor: pointer;
-    }
-    input[type="range"].ios-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      background: #FFFFFF;
-      box-shadow: 0 0 10px rgba(34, 211, 238, 0.65);
-    }
-
-    /* Scrollbars Minimalistas */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.28); border-radius: 999px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.48); }
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    /* Animações */
-    @keyframes spin-slow {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    .animate-spin-slow { animation: spin-slow 1.3s linear infinite; }
-
-    @keyframes pulse-live {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.82); }
-    }
-    .live-dot { animation: pulse-live 1.5s ease-in-out infinite; }
-
-    @keyframes fade-up {
-      from { opacity: 0; transform: translateY(10px) scale(0.985); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-    .animate-fade-up { animation: fade-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
-
-    /* Controles do player visíveis no hover ou toque */
-    .player-wrapper:hover .player-controls-bar,
-    .player-wrapper.controls-visible .player-controls-bar {
-      opacity: 1;
-      transform: translateY(0);
-      pointer-events: auto;
-    }
+/* ... existing code ... -->
     .player-controls-bar {
       opacity: 0;
       transform: translateY(8px);
       transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
       pointer-events: none;
+    }
+
+    /* ==========================================================================
+       GITHUB DYNAMIC ISLAND (iOS SPRING + LIQUID GLASS)
+       ========================================================================== */
+    .gh-island-dock {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 90;
+      pointer-events: none;
+      max-width: calc(100vw - 24px);
+    }
+
+    .gh-island {
+      pointer-events: auto;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      height: 44px;
+      padding: 6px 14px 6px 10px;
+      border-radius: 9999px;
+      text-decoration: none;
+      color: #F8FAFC;
+      background: rgba(5, 7, 11, 0.88);
+      backdrop-filter: blur(var(--glass-blur)) saturate(1.9);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.9);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.26),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 18px 44px -8px rgba(0, 0, 0, 0.72),
+        0 4px 16px -2px rgba(6, 182, 212, 0.16);
+      overflow: hidden;
+      cursor: pointer;
+      outline: none;
+      transition:
+        transform 0.48s cubic-bezier(0.34, 1.56, 0.64, 1),
+        padding 0.48s cubic-bezier(0.34, 1.56, 0.64, 1),
+        border-color 0.28s ease,
+        box-shadow 0.36s ease,
+        background-color 0.28s ease;
+    }
+
+    /* Brilho refrativo ambiental no hover */
+    .gh-island::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.26), transparent 68%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.32s ease;
+    }
+
+    .gh-island:hover::before,
+    .gh-island:focus-visible::before,
+    .gh-island.is-expanded::before {
+      opacity: 1;
+    }
+
+    .gh-island:hover,
+    .gh-island:focus-visible,
+    .gh-island.is-expanded {
+      transform: translateY(-2px) scale(1.018);
+      padding: 6px 10px 6px 12px;
+      border-color: rgba(56, 189, 248, 0.42);
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.36),
+        0 22px 50px -10px rgba(0, 0, 0, 0.78),
+        0 0 28px -4px rgba(56, 189, 248, 0.30);
+    }
+
+    .gh-island:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    /* Núcleo Compacto */
+    .gh-island-core {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .gh-island-icon-wrap {
+      width: 28px;
+      height: 28px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.09);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition:
+        transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background-color 0.25s ease,
+        border-color 0.25s ease;
+    }
+
+    .gh-island:hover .gh-island-icon-wrap,
+    .gh-island:focus-visible .gh-island-icon-wrap,
+    .gh-island.is-expanded .gh-island-icon-wrap {
+      transform: scale(1.12) rotate(-5deg);
+      background: rgba(56, 189, 248, 0.18);
+      border-color: rgba(56, 189, 248, 0.45);
+    }
+
+    .gh-island-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 9999px;
+      background: #22C55E;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.95);
+      flex-shrink: 0;
+      animation: pulse-live 1.7s ease-in-out infinite;
+    }
+
+    .gh-island-handle {
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #F8FAFC;
+      white-space: nowrap;
+    }
+
+    /* Conteúdo Expandido com Física Spring */
+    .gh-island-expand {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 0;
+      opacity: 0;
+      margin-left: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      transition:
+        max-width 0.54s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.26s ease,
+        margin-left 0.44s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .gh-island:hover .gh-island-expand,
+    .gh-island:focus-visible .gh-island-expand,
+    .gh-island.is-expanded .gh-island-expand {
+      max-width: 320px;
+      opacity: 1;
+      margin-left: 10px;
+    }
+
+    .gh-island-sep {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.18);
+      flex-shrink: 0;
+    }
+
+    .gh-island-url {
+      font-family: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
+      font-size: 11px;
+      color: #94A3B8;
+      letter-spacing: -0.01em;
+    }
+
+    .gh-island-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #FFFFFF;
+      background: linear-gradient(135deg, #6366F1, #06B6D4);
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 6px 16px -4px rgba(6, 182, 212, 0.55);
+      flex-shrink: 0;
+    }
+
+    /* Adaptação de Alto Contraste para Modo Claro */
+    html.light .gh-island {
+      background: rgba(10, 14, 24, 0.90);
+      border-color: rgba(15, 23, 42, 0.22);
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.24),
+        0 18px 38px -10px rgba(15, 23, 42, 0.34),
+        0 4px 12px -2px rgba(99, 102, 241, 0.18);
+    }
+
+    /* Adaptação para Modo Sólido e Preferência de Redução de Transparência */
+    html.solid-mode .gh-island {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background: #05070B !important;
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+    html.light.solid-mode .gh-island {
+      background: #0F172A !important;
+      border-color: #334155;
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+      .gh-island {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background: #05070B;
+      }
+      html.light .gh-island {
+        background: #0F172A;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .gh-island-url {
+        display: none;
+      }
+      .gh-island:hover .gh-island-expand,
+      .gh-island:focus-visible .gh-island-expand,
+      .gh-island.is-expanded .gh-island-expand {
+        max-width: 175px;
+      }
+    }
+
+    @media print {
+      .gh-island-dock {
+        display: none !important;
+      }
     }
   </style>
 </head>
@@ -515,7 +479,7 @@
     </header>
 
     <!-- Grade Principal Responsiva -->
-    <main class="flex-1 max-w-[1640px] w-full mx-auto px-3 sm:px-6 py-4 sm:py-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+    <main class="flex-1 max-w-[1640px] w-full mx-auto px-3 sm:px-6 pt-4 sm:pt-5 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
       <!-- ====================================================================
            COLUNA ESQUERDA: PLAYER HLS.JS + BARRA DE TELEMETRIA DNS AO VIVO
@@ -590,6 +554,13 @@
               <h3 id="error-title" class="text-sm sm:text-base font-bold text-white">Não foi possível reproduzir o canal</h3>
               <p id="error-detail" class="text-xs text-slate-300 max-w-lg mt-1.5 leading-relaxed"></p>
               <div class="flex flex-wrap items-center justify-center gap-2 mt-4">
+                <button id="error-try-https-btn" type="button" class="hidden m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  Tentar HTTPS
+                </button>
                 <button id="error-copy-btn" type="button" class="m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30 flex items-center gap-1.5">
                   <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="9" y="9" width="13" height="13" rx="2" />
@@ -1052,45 +1023,45 @@
   <!-- ========================================================================
        5. NOTIFICAÇÕES TOAST (ZERO ALERT / ZERO CONFIRM)
        ======================================================================== -->
-  <div id="toast-container" class="fixed bottom-4 right-4 z-[60] flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
+  <div id="toast-container" class="fixed bottom-20 sm:bottom-5 right-4 z-[60] flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
   <!-- ========================================================================
-       MOTOR JAVASCRIPT COMPLETO (DoH + CACHE TTL + CDN FAILOVER + HLS + AUDITORIA)
+       6. GITHUB DYNAMIC ISLAND (FLUTUANTE E INTERATIVA — https://github.com/jarodofc)
        ======================================================================== -->
-  <script>
-    (function () {
-      'use strict';
+  <nav class="gh-island-dock" aria-label="Perfil GitHub de Jarod">
+    <a
+      id="gh-dynamic-island"
+      href="https://github.com/jarodofc"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="gh-island"
+      title="Abrir GitHub: https://github.com/jarodofc"
+    >
+      <!-- Estado Compacto: Ícone GitHub SVG + Indicador Online + @jarodofc -->
+      <span class="gh-island-core">
+        <span class="gh-island-icon-wrap" aria-hidden="true">
+          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0.5C5.37 0.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.05-.02-2.06-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.67-.3-5.47-1.34-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6.01 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.25 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.6-2.81 5.63-5.48 5.92.43.37.81 1.1.81 2.22 0 1.61-.01 2.9-.01 3.29 0 .32.22.7.83.58C20.57 22.3 24 17.8 24 12.5 24 5.87 18.63 0.5 12 0.5z" />
+          </svg>
+        </span>
+        <span class="gh-island-dot" aria-label="Online"></span>
+        <span class="gh-island-handle">@jarodofc</span>
+      </span>
 
-      /* ======================================================================
-         CONSTANTES DO REPOSITÓRIO E POOL PÚBLICO DE APIS DoH (ZERO PROXY CORS)
-         ====================================================================== */
-      const HANDSHAKE_TEST_HOST = 'raw.githubusercontent.com';
-      const DOH_TIMEOUT_MS = 4500;
-      const MIN_TTL_SEC = 60;
-      const MAX_TTL_SEC = 600;
-      const PAGE_SIZE = 80;
-      const BATCH_CONCURRENCY = 6;
-
-      const STORAGE_KEYS = {
-        FAVORITES: 'iptv_br_2026_doh_favorites_v2',
-        CUSTOM_DOH: 'iptv_br_2026_doh_custom_resolvers_v2',
-        THEME: 'iptv_br_2026_doh_theme_v2',
-        SOLID: 'iptv_br_2026_doh_solid_v2',
-      };
-
-      // As 7 listas reais do repositório Ramys/Iptv-Brasil-2026
-      const OFFICIAL_PLAYLISTS = [
-        { id: 'canais-iptv', name: 'Canais IPTV', file: 'CanaisIPTV.m3u8' },
-        { id: 'filmes-series', name: 'Filmes & Séries', file: 'Filmes-Series.m3u8' },
-        { id: 'br-01', name: 'Canais BR 01', file: 'CanaisBR01.m3u8' },
-        { id: 'br-02', name: 'Canais BR 02', file: 'CanaisBR02.m3u8' },
-        { id: 'br-03', name: 'Canais BR 03', file: 'CanaisBR03.m3u8' },
-        { id: 'br-04', name: 'Canais BR 04', file: 'CanaisBR04.m3u8' },
-        { id: 'canais-geral', name: 'Canais Geral', file: 'Canais.m3u8' },
-      ];
-
-      // Espelhos oficiais com CORS nativo (ordem de failover automático)
-      const CDN_MIRRORS = [
+      <!-- Estado Expandido (Spring): Separador + URL + Badge Abrir GitHub -->
+      <span class="gh-island-expand">
+        <span class="gh-island-sep" aria-hidden="true"></span>
+        <span class="gh-island-url">github.com/jarodofc</span>
+        <span class="gh-island-cta">
+          <span>Abrir GitHub</span>
+          <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M7 17L17 7" />
+            <polyline points="8 7 17 7 17 16" />
+          </svg>
+        </span>
+      </span>
+    </a>
+  </nav>
         {
           id: 'github-master',
           label: 'GitHub Raw (master)',
@@ -1247,6 +1218,7 @@
         errorCategoryTag: document.getElementById('error-category-tag'),
         errorTitle: document.getElementById('error-title'),
         errorDetail: document.getElementById('error-detail'),
+        errorTryHttpsBtn: document.getElementById('error-try-https-btn'),
         errorCopyBtn: document.getElementById('error-copy-btn'),
         errorReloadBtn: document.getElementById('error-reload-btn'),
         errorExternalLink: document.getElementById('error-external-link'),
@@ -1329,6 +1301,7 @@
         importFileInput: document.getElementById('import-file-input'),
 
         toastContainer: document.getElementById('toast-container'),
+        ghDynamicIsland: document.getElementById('gh-dynamic-island'),
       };
 
       /* ======================================================================
@@ -2637,6 +2610,10 @@
         dom.errorTitle.textContent = title;
         dom.errorDetail.textContent = detail;
         dom.errorExternalLink.href = state.currentChannel ? state.currentChannel.url : '#';
+
+        // Exibe o botão "Tentar HTTPS" quando houver bloqueio Mixed Content em streams http://
+        const canTryHttps = kind === 'mixed' || Boolean(state.currentChannel && /^http:\/\//i.test(state.currentChannel.url));
+        dom.errorTryHttpsBtn.classList.toggle('hidden', !canTryHttps);
       }
 
       async function playChannel(channel) {
@@ -3074,25 +3051,49 @@
         });
 
         // Botões do Overlay de Diagnóstico
+        dom.errorTryHttpsBtn.addEventListener('click', () => {
+          if (!state.currentChannel || !state.currentChannel.url) return;
+          const httpsUrl = state.currentChannel.url.replace(/^http:\/\//i, 'https://');
+          dom.playerErrorOverlay.classList.add('hidden');
+          dom.playerLoadingOverlay.classList.remove('hidden');
+          dom.playerLoadingText.textContent = 'Promovendo conexão para HTTPS e reconectando stream...';
+          setStreamStatus('buffering');
+          state.hlsRetryCount = 0;
+          showToast('Tentando reprodução segura via HTTPS...', 'info');
+          startDirectPlayback(httpsUrl, false, state.currentChannelDns || { host: state.currentChannel.host, ipv4: [], ipv6: [] });
+        });
+
         dom.errorCopyBtn.addEventListener('click', () => {
           if (state.currentChannel) {
             copyToClipboard(state.currentChannel.url, 'URL copiada! Cole no VLC ou TiviMate.');
           }
         });
-
-        dom.errorReloadBtn.addEventListener('click', () => {
-          if (state.currentChannel) playChannel(state.currentChannel);
+        // Tecla ESC fecha modais e recolhe a Dynamic Island
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            closeDnsModal();
+            closeImportModal();
+            if (dom.ghDynamicIsland) dom.ghDynamicIsland.classList.remove('is-expanded');
+          }
         });
 
-        // Modal Central DNS
-        const openDnsModal = () => {
-          renderModalDohList();
-          updateCacheStatsUi();
-          if (state.currentChannel && state.currentChannel.host && !isIpAddress(state.currentChannel.host)) {
-            dom.lookupDomainInput.value = state.currentChannel.host;
-          } else if (!dom.lookupDomainInput.value) {
-            dom.lookupDomainInput.value = HANDSHAKE_TEST_HOST;
-          }
+        // Interação touch otimizada para a GitHub Dynamic Island em dispositivos móveis
+        if (dom.ghDynamicIsland) {
+          dom.ghDynamicIsland.addEventListener('click', (e) => {
+            const isTouchDevice = window.matchMedia('(hover: none)').matches;
+            if (isTouchDevice && !dom.ghDynamicIsland.classList.contains('is-expanded')) {
+              e.preventDefault();
+              dom.ghDynamicIsland.classList.add('is-expanded');
+            }
+          });
+
+          document.addEventListener('click', (e) => {
+            if (dom.ghDynamicIsland.classList.contains('is-expanded') && !dom.ghDynamicIsland.contains(e.target)) {
+              dom.ghDynamicIsland.classList.remove('is-expanded');
+            }
+          });
+        }
+      }
           dom.dnsModal.classList.remove('hidden');
         };
         const closeDnsModal = () => dom.dnsModal.classList.add('hidden');
