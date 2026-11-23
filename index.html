@@ -2169,7 +2169,7 @@
         }).catch(err => {
           if (playSeq === state.streamPlaybackSeq) console.info('Diagnóstico DoH indisponível:', err.message);
         });
-        const mixed = location.protocol === 'https:' && /^http:///i.test(channel.url);
+        const mixed = location.protocol === 'https:' && channel.url.toLowerCase().startsWith('http:');
         void startDirectPlayback(channel.url, mixed);
       }
 
