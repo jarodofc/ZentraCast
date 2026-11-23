@@ -2778,6 +2778,13 @@
             } finally {
               completed++;
               if (seq === state.playlistLoadSeq) {
+                // Exibe os primeiros resultados enquanto outras fontes ainda carregam.
+                if (channels.length && (completed === 1 || completed % 2 === 0)) {
+                  state.allChannels = channels.slice();
+                  dom.listLoadingState.classList.add('hidden');
+                  buildCategoryChips();
+                  applyFiltersAndRender();
+                }
                 dom.channelCounter.textContent = 'Unificando ' + completed + '/' + sources.length + ' • ' + channels.length.toLocaleString('pt-BR') + ' streams';
               }
             }
