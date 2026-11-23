@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ZentraCast">
+  <rect width="64" height="64" rx="16" fill="#111927"/>
+  <path d="M16 20h31L16 44h31" fill="none" stroke="#F6F8FC" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="49" cy="12" r="2.5" fill="#83AEFF"/>
+  <path d="M42 8a10 10 0 0 1 11 11" fill="none" stroke="#83AEFF" stroke-width="2.8" stroke-linecap="round"/>
+</svg>
