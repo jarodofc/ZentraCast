@@ -1,9 +1,9 @@
 {
-  "name": "zplayer",
+  "name": "zentracast",
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "IPTV Hub + Web Video Caster: aplicativo 100% client-side",
+  "description": "ZentraCast: minimal IPTV & Web Video Caster web player",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "typecheck": "tsc --noEmit",
