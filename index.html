@@ -1,0 +1,2582 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>IPTV Brasil 2026 — Material X &amp; iOS Glass Player</title>
+
+  <!-- Tipografia Inter + Stack nativa SF Pro (iOS/macOS) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- HLS.js via CDN para reprodução de streams .m3u8 -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <script>
+    // Configuração de tokens de design Tailwind inspirados em Material You + iOS Dark Vibrancy
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Inter"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            obsidian: '#06080F',
+            surface: '#0D1220',
+            accent: {
+              indigo: '#6366F1',
+              cyan: '#22D3EE',
+              violet: '#8B5CF6',
+            }
+          },
+          transitionTimingFunction: {
+            spring: 'cubic-bezier(0.22, 1, 0.36, 1)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* ==========================================================================
+       SISTEMA DE DESIGN: MATERIAL X + iOS GLASSMORPHISM (DARK HIGH-CONTRAST)
+       ========================================================================== */
+    :root {
+      --glass-bg: rgba(16, 22, 38, 0.58);
+      --glass-bg-elevated: rgba(22, 30, 52, 0.72);
+      --glass-border: rgba(255, 255, 255, 0.11);
+      --glass-specular: rgba(255, 255, 255, 0.22);
+      --glass-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.65);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #06080F;
+      color: #F8FAFC;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Fundo Mesh Dinâmico (Obsidian + Índigo + Ciano) */
+    .ambient-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(circle at 12% 18%, rgba(99, 102, 241, 0.22) 0%, transparent 42%),
+        radial-gradient(circle at 86% 14%, rgba(34, 211, 238, 0.15) 0%, transparent 38%),
+        radial-gradient(circle at 52% 88%, rgba(139, 92, 246, 0.14) 0%, transparent 46%),
+        linear-gradient(180deg, #06080F 0%, #090D18 55%, #05070D 100%);
+      pointer-events: none;
+    }
+
+    /* Materiais Translúcidos iOS (Blur 24px + Saturate 180% + Borda Especular) */
+    .ios-glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        inset 0 1px 0 0 rgba(255, 255, 255, 0.09),
+        var(--glass-shadow);
+    }
+
+    .ios-glass-strong {
+      background: var(--glass-bg-elevated);
+      backdrop-filter: blur(32px) saturate(195%);
+      -webkit-backdrop-filter: blur(32px) saturate(195%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow:
+        inset 0 1px 0 0 var(--glass-specular),
+        0 28px 64px -16px rgba(0, 0, 0, 0.78);
+    }
+
+    .ios-pill {
+      background: rgba(255, 255, 255, 0.055);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      transition: all 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .ios-pill:hover {
+      background: rgba(255, 255, 255, 0.11);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+
+    .ios-pill.active {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.92), rgba(34, 211, 238, 0.78));
+      border-color: rgba(255, 255, 255, 0.32);
+      color: #FFFFFF;
+      box-shadow:
+        0 8px 24px -6px rgba(99, 102, 241, 0.55),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    /* Cartão de Canal Material X */
+    .channel-card {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+                  background-color 0.22s ease,
+                  border-color 0.22s ease,
+                  box-shadow 0.22s ease;
+    }
+
+    .channel-card:hover {
+      background: rgba(255, 255, 255, 0.075);
+      border-color: rgba(255, 255, 255, 0.16);
+      transform: translateY(-1px);
+    }
+
+    .channel-card.playing {
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(34, 211, 238, 0.12));
+      border-color: rgba(99, 102, 241, 0.58);
+      box-shadow: 0 8px 28px -10px rgba(99, 102, 241, 0.45);
+    }
+
+    /* Botão estilo Material 3 Filled / Tonal */
+    .m3-btn {
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .m3-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Switch estilo iOS */
+    .ios-switch {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      transition: background 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      flex-shrink: 0;
+    }
+    .ios-switch.on {
+      background: linear-gradient(135deg, #6366F1, #22D3EE);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+    .ios-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+      transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .ios-switch.on::after {
+      transform: translateX(20px);
+    }
+
+    /* Slider de Volume Translúcido */
+    input[type="range"].ios-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.18);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"].ios-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.6);
+      transition: transform 0.15s ease;
+    }
+    input[type="range"].ios-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Scrollbars Minimalistas */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Animações */
+    @keyframes spin-slow {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .animate-spin-slow {
+      animation: spin-slow 1.6s linear infinite;
+    }
+
+    @keyframes pulse-live {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.82); }
+    }
+    .live-dot {
+      animation: pulse-live 1.5s ease-in-out infinite;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(10px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-fade-up {
+      animation: fade-up 0.36s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Controles do player visíveis no hover ou toque */
+    .player-wrapper:hover .player-controls-bar,
+    .player-wrapper.controls-visible .player-controls-bar {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .player-controls-bar {
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-indigo-500/40 selection:text-white">
+
+  <!-- Fundo Gradiente Mesh -->
+  <div class="ambient-mesh" aria-hidden="true"></div>
+
+  <!-- ========================================================================
+       1. TELA DE BOOT / HANDSHAKE DE PROXY (SPLASH GATE)
+       ======================================================================== -->
+  <div id="boot-gate" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-obsidian/90 backdrop-blur-2xl transition-all duration-700 ease-spring">
+    <div class="ios-glass-strong w-full max-w-lg rounded-[28px] p-6 sm:p-8 relative overflow-hidden">
+      <!-- Brilho superior decorativo -->
+      <div class="absolute -top-24 -right-24 w-56 h-56 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-56 h-56 rounded-full bg-cyan-400/15 blur-3xl pointer-events-none"></div>
+
+      <div class="relative z-10">
+        <!-- Cabeçalho do Boot -->
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-400 p-[1px] shadow-lg shadow-indigo-500/30 flex-shrink-0">
+            <div class="w-full h-full rounded-[15px] bg-obsidian/85 flex items-center justify-center">
+              <svg class="w-7 h-7 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="3" />
+                <path d="M17 2l-5 5-5-5" />
+                <polygon points="10 11 15 14 10 17 10 11" fill="currentColor" stroke="none" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">IPTV Brasil 2026</h1>
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">Proxy Shield</span>
+            </div>
+            <p id="boot-subtitle" class="text-xs sm:text-sm text-slate-400 mt-0.5">Estabelecendo túnel CORS de baixa latência...</p>
+          </div>
+        </div>
+
+        <!-- Barra de Progresso -->
+        <div class="mb-5">
+          <div class="flex items-center justify-between text-xs font-medium mb-2">
+            <span id="boot-status-text" class="text-cyan-300 flex items-center gap-2">
+              <svg class="w-3.5 h-3.5 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round" />
+              </svg>
+              Testando pool de proxies públicos do GitHub...
+            </span>
+            <span id="boot-progress-pct" class="text-slate-300 tabular-nums">0%</span>
+          </div>
+          <div class="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+            <div id="boot-progress-bar" class="h-full w-0 rounded-full bg-gradient-to-r from-indigo-500 via-violet-400 to-cyan-400 transition-all duration-300 ease-out"></div>
+          </div>
+        </div>
+
+        <!-- Lista de Proxies em Teste em Tempo Real -->
+        <div id="boot-proxy-list" class="space-y-2 mb-6">
+          <!-- Preenchido dinamicamente pelo JS -->
+        </div>
+
+        <!-- Rodapé / Ações de Contingência -->
+        <div class="flex items-center justify-between gap-3 pt-4 border-t border-white/10">
+          <div class="flex items-center gap-2 text-[11px] text-slate-400">
+            <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <span>Alvo: Ramys/Iptv-Brasil-2026</span>
+          </div>
+          <button id="boot-skip-btn" type="button" class="hidden m3-btn px-3.5 py-1.5 rounded-full text-xs font-medium bg-white/10 hover:bg-white/15 text-slate-200 border border-white/15">
+            Entrar em Modo Direto
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       2. APLICAÇÃO PRINCIPAL (INICIALMENTE OCULTA ATÉ O HANDSHAKE)
+       ======================================================================== -->
+  <div id="app-shell" class="opacity-0 pointer-events-none transition-opacity duration-700 min-h-screen flex flex-col">
+
+    <!-- Top App Bar Translúcida -->
+    <header class="sticky top-0 z-30 ios-glass border-x-0 border-t-0">
+      <div class="max-w-[1600px] mx-auto px-3 sm:px-6 py-3 flex items-center justify-between gap-3">
+        <!-- Marca -->
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-cyan-400 p-[1px] shadow-md shadow-indigo-500/25 flex-shrink-0">
+            <div class="w-full h-full rounded-[15px] bg-obsidian/90 flex items-center justify-center">
+              <svg class="w-5 h-5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="3" />
+                <path d="M17 2l-5 5-5-5" />
+                <polygon points="10 11 15 14 10 17 10 11" fill="currentColor" stroke="none" />
+              </svg>
+            </div>
+          </div>
+          <div class="min-w-0">
+            <h1 class="text-sm sm:text-base font-bold tracking-tight text-white truncate">IPTV Brasil 2026</h1>
+            <p class="text-[11px] text-slate-400 truncate hidden sm:block">Material X &amp; iOS Glass • Ramys/Iptv-Brasil-2026</p>
+          </div>
+        </div>
+
+        <!-- Controles da Direita: Badge de Proxy + Importar Lista -->
+        <div class="flex items-center gap-2 sm:gap-2.5 flex-shrink-0">
+          <!-- Badge Interativo de Status do Proxy -->
+          <button id="open-proxy-modal-btn" type="button" class="m3-btn ios-pill rounded-full px-3 py-2 flex items-center gap-2 text-xs font-medium text-slate-100" title="Central de Controle de Proxy">
+            <span id="header-proxy-dot" class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"></span>
+            <span id="header-proxy-label" class="max-w-[110px] sm:max-w-[190px] truncate">Conectando...</span>
+            <span id="header-proxy-latency" class="hidden sm:inline-block px-1.5 py-0.5 rounded-full bg-white/10 text-[10px] font-semibold text-cyan-300 tabular-nums">-- ms</span>
+            <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9" stroke-linecap="round" />
+              <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+
+          <!-- Botão Importar Lista Customizada / Local -->
+          <button id="open-import-modal-btn" type="button" class="m3-btn ios-pill rounded-full px-3 py-2 flex items-center gap-2 text-xs font-medium text-slate-100" title="Importar URL ou arquivo M3U8">
+            <svg class="w-4 h-4 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            <span class="hidden md:inline">Importar M3U8</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Seletor de Listas Oficiais (Pílulas iOS Segmented / Material Chips) -->
+      <div class="max-w-[1600px] mx-auto px-3 sm:px-6 pb-3">
+        <div id="playlist-pills" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+          <!-- Renderizado via JS -->
+        </div>
+      </div>
+    </header>
+
+    <!-- Conteúdo Principal: Layout Responsivo 2 Colunas (Desktop) / Empilhado (Mobile) -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-6 py-4 sm:py-6 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+
+      <!-- ====================================================================
+           COLUNA ESQUERDA (7 cols no Desktop): PLAYER + TELEMETRIA DE PROXY
+           ==================================================================== -->
+      <section class="lg:col-span-7 xl:col-span-8 flex flex-col gap-4 lg:sticky lg:top-[128px]">
+
+        <!-- Container Glassmórfico do Player -->
+        <div class="ios-glass rounded-[28px] p-2.5 sm:p-3.5 overflow-hidden">
+          <!-- Palco do Vídeo 16:9 -->
+          <div id="player-wrapper" class="player-wrapper controls-visible relative w-full aspect-video rounded-[20px] overflow-hidden bg-black shadow-2xl border border-white/10 group">
+            <video id="video-player" class="w-full h-full object-contain bg-black" playsinline webkit-playsinline></video>
+
+            <!-- Barra Superior do Player (Info do Canal + Status) -->
+            <div class="absolute top-0 inset-x-0 p-3 sm:p-4 bg-gradient-to-b from-black/85 via-black/40 to-transparent flex items-start justify-between gap-3 pointer-events-none">
+              <div class="flex items-center gap-3 min-w-0">
+                <div id="player-channel-logo-box" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  <svg class="w-5 h-5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <rect x="2" y="7" width="20" height="14" rx="3" />
+                    <path d="M17 2l-5 5-5-5" />
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h2 id="player-channel-title" class="text-sm sm:text-base font-semibold text-white truncate drop-shadow">Selecione um canal</h2>
+                  <p id="player-channel-group" class="text-[11px] text-slate-300 truncate">Pronto para reproduzir via HLS.js</p>
+                </div>
+              </div>
+
+              <!-- Badges de Estado (AO VIVO / PROXY / BUFFER) -->
+              <div class="flex flex-wrap items-center justify-end gap-1.5 flex-shrink-0">
+                <span id="stream-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 backdrop-blur-md border border-white/15 text-slate-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                  AGUARDANDO
+                </span>
+                <span id="stream-route-badge" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-indigo-500/20 backdrop-blur-md border border-indigo-400/30 text-indigo-200">
+                  Rota Direta
+                </span>
+              </div>
+            </div>
+
+            <!-- Estado Inicial (Sem Canal Selecionado) -->
+            <div id="player-idle-overlay" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-slate-950/90 via-obsidian/90 to-indigo-950/50">
+              <div class="w-16 h-16 rounded-3xl ios-glass flex items-center justify-center mb-4 shadow-xl shadow-indigo-500/20">
+                <svg class="w-8 h-8 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="6 4 20 12 6 20 6 4" fill="currentColor" fill-opacity="0.2" />
+                </svg>
+              </div>
+              <h3 class="text-base sm:text-lg font-bold text-white">Player HLS Inteligente</h3>
+              <p class="text-xs sm:text-sm text-slate-400 max-w-sm mt-1">Escolha qualquer canal ou filme na lista ao lado. Se houver bloqueio CORS, o failover de proxy entra em ação automaticamente.</p>
+            </div>
+
+            <!-- Overlay de Carregamento / Buffer -->
+            <div id="player-loading-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10">
+              <div class="w-12 h-12 rounded-2xl ios-glass flex items-center justify-center mb-3">
+                <svg class="w-6 h-6 text-cyan-300 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round" />
+                </svg>
+              </div>
+              <p id="player-loading-text" class="text-xs sm:text-sm font-medium text-white">Conectando ao stream...</p>
+            </div>
+
+            <!-- Overlay de Erro / Canal Offline -->
+            <div id="player-error-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-obsidian/90 backdrop-blur-md z-20">
+              <div class="w-14 h-14 rounded-2xl bg-rose-500/15 border border-rose-400/30 flex items-center justify-center mb-3">
+                <svg class="w-7 h-7 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-white">Sinal indisponível no momento</h3>
+              <p id="player-error-detail" class="text-xs text-slate-400 max-w-md mt-1 mb-4">O servidor do canal não respondeu ou bloqueou a reprodução nesta rota.</p>
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <button id="error-try-next-proxy-btn" type="button" class="m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30 flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  Tentar outro Proxy
+                </button>
+                <button id="error-reload-btn" type="button" class="m3-btn px-4 py-2 rounded-full text-xs font-medium bg-white/10 hover:bg-white/15 text-white border border-white/15">
+                  Recarregar
+                </button>
+                <button id="error-copy-btn" type="button" class="m3-btn px-4 py-2 rounded-full text-xs font-medium bg-white/10 hover:bg-white/15 text-slate-200 border border-white/15">
+                  Copiar Link
+                </button>
+              </div>
+            </div>
+
+            <!-- Barra de Controles Translúcida estilo iOS/Material -->
+            <div class="player-controls-bar absolute bottom-3 inset-x-3 z-20">
+              <div class="ios-glass-strong rounded-2xl px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+                <!-- Esquerda: Play/Pause + Volume + Recarregar -->
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                  <button id="ctrl-play-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" title="Reproduzir / Pausar">
+                    <svg id="icon-play" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="6 4 20 12 6 20 6 4" />
+                    </svg>
+                    <svg id="icon-pause" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="currentColor">
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </svg>
+                  </button>
+
+                  <button id="ctrl-reload-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-200" title="Recarregar Stream">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="23 4 23 10 17 10" />
+                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                    </svg>
+                  </button>
+
+                  <!-- Volume / Mudo -->
+                  <div class="flex items-center gap-1.5 pl-1">
+                    <button id="ctrl-mute-btn" type="button" class="m3-btn w-8 h-8 rounded-xl hover:bg-white/10 flex items-center justify-center text-slate-200" title="Mudo / Som">
+                      <svg id="icon-vol-on" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                      </svg>
+                      <svg id="icon-vol-off" class="w-4 h-4 hidden text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                        <line x1="23" y1="9" x2="17" y2="15" />
+                        <line x1="17" y1="9" x2="23" y2="15" />
+                      </svg>
+                    </button>
+                    <input id="ctrl-volume-slider" type="range" min="0" max="1" step="0.05" value="1" class="ios-slider w-16 sm:w-20" aria-label="Volume" />
+                  </div>
+                </div>
+
+                <!-- Direita: Proxy no Stream, Favoritar, Copiar Link, PiP, Tela Cheia -->
+                <div class="flex items-center gap-1 sm:gap-1.5">
+                  <button id="ctrl-proxy-toggle-btn" type="button" class="m3-btn h-9 px-2.5 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 flex items-center gap-1.5 text-[11px] font-semibold text-slate-200" title="Alternar Proxy no Stream">
+                    <svg class="w-3.5 h-3.5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    <span id="ctrl-proxy-toggle-label" class="hidden sm:inline">Proxy: Auto</span>
+                  </button>
+
+                  <button id="ctrl-fav-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-200" title="Favoritar Canal">
+                    <svg id="ctrl-fav-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                  </button>
+
+                  <button id="ctrl-copy-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-200" title="Copiar Link do Stream">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    </svg>
+                  </button>
+
+                  <button id="ctrl-pip-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-200" title="Picture-in-Picture">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2" />
+                      <rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" fill-opacity="0.3" />
+                    </svg>
+                  </button>
+
+                  <button id="ctrl-fullscreen-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" title="Tela Cheia">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="15 3 21 3 21 9" />
+                      <polyline points="9 21 3 21 3 15" />
+                      <line x1="21" y1="3" x2="14" y2="10" />
+                      <line x1="3" y1="21" x2="10" y2="14" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ações Rápidas abaixo do Vídeo (Mobile-friendly) -->
+          <div class="mt-3 px-1 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="flex items-center gap-1.5 text-xs text-slate-400">
+                <svg class="w-4 h-4 text-indigo-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0" stroke-linecap="round" />
+                  <path d="M1.42 9a16 16 0 0 1 21.16 0" stroke-linecap="round" />
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0" stroke-linecap="round" />
+                  <circle cx="12" cy="20" r="1" fill="currentColor" />
+                </svg>
+                <span id="player-meta-info" class="truncate">Auto-Failover ativo • HLS.js v1</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <span class="text-xs font-medium text-slate-300">Proxy no Stream</span>
+                <button id="quick-stream-proxy-switch" type="button" role="switch" aria-checked="false" class="ios-switch"></button>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra Compacta de Telemetria dos Nós de Proxy -->
+        <div class="ios-glass rounded-[22px] p-3.5">
+          <div class="flex items-center justify-between gap-2 mb-2.5">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              <span class="text-xs font-semibold uppercase tracking-wider text-slate-300">Telemetria dos Proxies Remotos</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="telemetry-retest-btn" type="button" class="m3-btn text-[11px] font-medium text-cyan-300 hover:text-cyan-200 flex items-center gap-1 px-2 py-1 rounded-full bg-cyan-500/10 border border-cyan-400/20">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                </svg>
+                Testar Pool
+              </button>
+              <button id="telemetry-config-btn" type="button" class="m3-btn text-[11px] font-medium text-slate-300 hover:text-white px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10">
+                Central
+              </button>
+            </div>
+          </div>
+          <div id="telemetry-nodes-bar" class="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5">
+            <!-- Nós de proxy renderizados via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ====================================================================
+           COLUNA DIREITA (5 cols no Desktop): BUSCA, FILTROS E LISTA DE CANAIS
+           ==================================================================== -->
+      <section class="lg:col-span-5 xl:col-span-4 ios-glass rounded-[28px] flex flex-col overflow-hidden lg:h-[calc(100vh-152px)] min-h-[540px]">
+
+        <!-- Cabeçalho do Catálogo: Busca + Abas (Todos / Favoritos) -->
+        <div class="p-4 border-b border-white/10 space-y-3 flex-shrink-0">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 id="current-playlist-name" class="text-sm sm:text-base font-bold text-white">Canais IPTV</h2>
+              <p id="channel-counter" class="text-[11px] text-slate-400 tabular-nums">Carregando lista...</p>
+            </div>
+
+            <!-- Controle Segmentado iOS: Todos vs Favoritos -->
+            <div class="p-1 rounded-full bg-black/40 border border-white/10 flex items-center gap-1">
+              <button id="tab-all-btn" type="button" class="m3-btn px-3 py-1 rounded-full text-xs font-semibold bg-white/15 text-white shadow-sm">
+                Todos
+              </button>
+              <button id="tab-fav-btn" type="button" class="m3-btn px-3 py-1 rounded-full text-xs font-medium text-slate-400 hover:text-white flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                <span>Favoritos</span>
+                <span id="fav-count-badge" class="px-1.5 py-0.2 rounded-full bg-white/10 text-[10px] tabular-nums">0</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Campo de Busca em Tempo Real -->
+          <div class="relative">
+            <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Buscar canal, filme, série ou categoria..."
+              autocomplete="off"
+              class="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-black/35 border border-white/10 focus:border-indigo-400/70 focus:bg-black/50 text-xs sm:text-sm text-white placeholder-slate-500 outline-none transition-all"
+            />
+            <button id="clear-search-btn" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-300" aria-label="Limpar busca">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Chips Dinâmicos de Categorias (group-title) -->
+          <div id="category-chips" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
+            <!-- Renderizado via JS -->
+          </div>
+        </div>
+
+        <!-- Lista de Canais com Renderização Paginada/Incremental -->
+        <div id="channel-list-container" class="flex-1 overflow-y-auto p-3 space-y-2 relative">
+          <!-- Skeleton de Carregamento -->
+          <div id="list-loading-state" class="space-y-2.5 py-2">
+            <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+            <div class="h-16 rounded-2xl bg-white/5 animate-pulse"></div>
+          </div>
+
+          <!-- Itens dos Canais -->
+          <div id="channel-list" class="space-y-2"></div>
+
+          <!-- Sentinela para Scroll Infinito + Botão Carregar Mais -->
+          <div id="load-more-container" class="hidden pt-2 pb-4 text-center">
+            <button id="load-more-btn" type="button" class="m3-btn ios-pill px-5 py-2.5 rounded-full text-xs font-semibold text-cyan-300">
+              Carregar mais canais
+            </button>
+          </div>
+
+          <!-- Estado Vazio / Erro ao Carregar Lista -->
+          <div id="list-empty-state" class="hidden flex flex-col items-center justify-center text-center py-12 px-4">
+            <div class="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-3 text-slate-400">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </div>
+            <h3 id="empty-state-title" class="text-sm font-semibold text-white">Nenhum item encontrado</h3>
+            <p id="empty-state-desc" class="text-xs text-slate-400 mt-1 max-w-xs">Tente ajustar sua busca ou trocar a categoria selecionada.</p>
+            <button id="retry-playlist-btn" type="button" class="hidden mt-4 m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-indigo-500 text-white">
+              Tentar carregar lista novamente
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ========================================================================
+       3. MODAL: CENTRAL DE CONTROLE DE PROXY
+       ======================================================================== -->
+  <div id="proxy-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+    <div class="ios-glass-strong w-full max-w-xl rounded-[28px] overflow-hidden animate-fade-up max-h-[90vh] flex flex-col">
+      <!-- Topo -->
+      <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-cyan-300">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Central de Controle de Proxy</h3>
+            <p class="text-xs text-slate-400">Gerencie estabilidade CORS, failover e servidores customizados</p>
+          </div>
+        </div>
+        <button id="close-proxy-modal-btn" type="button" class="m3-btn w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-200" aria-label="Fechar modal">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Corpo -->
+      <div class="p-6 overflow-y-auto space-y-5">
+        <!-- Preferências de Roteamento -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold text-white">Proxy no Stream</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Força manifestos HLS via proxy ativo</p>
+            </div>
+            <button id="modal-stream-proxy-switch" type="button" role="switch" aria-checked="false" class="ios-switch"></button>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-xs font-semibold text-white">Auto-Failover</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Alterna rota ao detectar erro CORS</p>
+            </div>
+            <button id="modal-failover-switch" type="button" role="switch" aria-checked="true" class="ios-switch on"></button>
+          </div>
+        </div>
+
+        <!-- Lista de Proxies + Botão Re-testar -->
+        <div>
+          <div class="flex items-center justify-between mb-2.5">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-300">Pool de Proxies Disponíveis</h4>
+            <button id="modal-retest-all-btn" type="button" class="m3-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+              Testar Todos Agora
+            </button>
+          </div>
+          <div id="modal-proxy-list" class="space-y-2">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+
+        <!-- Adicionar Proxy Customizado (ex: Cloudflare Worker) -->
+        <div class="p-4 rounded-2xl bg-black/30 border border-white/10 space-y-3">
+          <div>
+            <h4 class="text-xs font-semibold text-white">Adicionar Proxy Remoto Customizado</h4>
+            <p class="text-[11px] text-slate-400 mt-0.5">Ex: seu próprio Cloudflare Worker (ex: https://meu-proxy.workers.dev/?url=)</p>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input id="custom-proxy-name" type="text" placeholder="Nome (ex: Meu Worker)" class="sm:w-40 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-400/60" />
+            <input id="custom-proxy-url" type="url" placeholder="https://seu-proxy.workers.dev/?url=" class="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-slate-500 outline-none focus:border-cyan-400/60" />
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <label class="flex items-center gap-2 text-[11px] text-slate-300 cursor-pointer">
+              <input id="custom-proxy-encode" type="checkbox" checked class="rounded bg-white/10 border-white/20 text-indigo-500 focus:ring-0" />
+              Aplicar encodeURIComponent na URL de destino
+            </label>
+            <button id="add-custom-proxy-btn" type="button" class="m3-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-md shadow-indigo-500/25">
+              Adicionar e Testar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       4. MODAL: IMPORTAR LISTA M3U8 PERSONALIZADA OU LOCAL
+       ======================================================================== -->
+  <div id="import-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+    <div class="ios-glass-strong w-full max-w-md rounded-[28px] overflow-hidden animate-fade-up">
+      <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+        <h3 class="text-base font-bold text-white">Importar Lista M3U / M3U8</h3>
+        <button id="close-import-modal-btn" type="button" class="m3-btn w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-slate-200" aria-label="Fechar">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-5">
+        <!-- Por URL -->
+        <div class="space-y-2">
+          <label for="import-url-input" class="block text-xs font-semibold text-slate-300">URL Remota (.m3u ou .m3u8)</label>
+          <input id="import-url-input" type="url" placeholder="https://exemplo.com/lista.m3u8" class="w-full px-3.5 py-2.5 rounded-2xl bg-black/35 border border-white/10 focus:border-indigo-400/70 text-xs text-white placeholder-slate-500 outline-none" />
+          <button id="import-url-submit-btn" type="button" class="w-full m3-btn py-2.5 rounded-2xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25">
+            Carregar via Proxy Ativo
+          </button>
+        </div>
+
+        <div class="flex items-center gap-3 text-[11px] text-slate-500">
+          <div class="h-px flex-1 bg-white/10"></div>
+          <span>OU ARQUIVO LOCAL</span>
+          <div class="h-px flex-1 bg-white/10"></div>
+        </div>
+
+        <!-- Upload de Arquivo Local -->
+        <label for="import-file-input" class="block cursor-pointer p-5 rounded-2xl border border-dashed border-white/20 hover:border-cyan-400/60 bg-white/[0.03] hover:bg-white/[0.06] text-center transition-all">
+          <svg class="w-7 h-7 text-cyan-300 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="12" y1="18" x2="12" y2="12" />
+            <line x1="9" y1="15" x2="15" y2="15" />
+          </svg>
+          <p class="text-xs font-semibold text-white">Selecionar arquivo .m3u ou .m3u8</p>
+          <p class="text-[11px] text-slate-400 mt-0.5">Processamento 100% local no navegador</p>
+          <input id="import-file-input" type="file" accept=".m3u,.m3u8,text/plain" class="hidden" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       5. CONTAINER DE NOTIFICAÇÕES TOAST (SEM ALERT/CONFIRM)
+       ======================================================================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
+
+  <!-- ========================================================================
+       LÓGICA DA APLICAÇÃO (JAVASCRIPT MODULAR EM ARQUIVO ÚNICO)
+       ======================================================================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* ======================================================================
+         CONFIGURAÇÕES E CONSTANTES
+         ====================================================================== */
+      const TEST_TARGET_URL = 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/README.md';
+      const PROXY_TIMEOUT_MS = 4500;
+      const PAGE_SIZE = 80;
+      const STORAGE_KEYS = {
+        FAVORITES: 'iptv_br_2026_favorites_v1',
+        CUSTOM_PROXIES: 'iptv_br_2026_custom_proxies_v1',
+      };
+
+      // Listas oficiais do repositório Ramys/Iptv-Brasil-2026 (branch master)
+      const OFFICIAL_PLAYLISTS = [
+        { id: 'canais-iptv', name: 'Canais IPTV', url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/CanaisIPTV.m3u8' },
+        { id: 'filmes-series', name: 'Filmes & Séries', url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/Filmes-Series.m3u8' },
+        { id: 'br-01', name: 'Canais BR 01', url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/CanaisBR01.m3u8' },
+        { id: 'br-02', name: 'Canais BR 02', url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/CanaisBR02.m3u8' },
+        { id: 'br-03', name: 'Canais BR 03', url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/CanaisBR03.m3u8' },
+        { id: 'br-04', name: 'Canais BR 04', url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/CanaisBR04.m3u8' },
+        { id: 'canais-geral', name: 'Canais Geral', url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/Canais.m3u8' },
+      ];
+
+      // Pool inicial dos melhores proxies CORS públicos/remotos conhecidos do GitHub
+      const DEFAULT_PROXIES = [
+        { id: 'allorigins', name: 'AllOrigins', prefix: 'https://api.allorigins.win/raw?url=', encode: true, custom: false },
+        { id: 'codetabs', name: 'CodeTabs', prefix: 'https://api.codetabs.com/v1/proxy?quest=', encode: true, custom: false },
+        { id: 'corsproxy', name: 'CorsProxy.io', prefix: 'https://corsproxy.io/?url=', encode: true, custom: false },
+        { id: 'corslol', name: 'CORS.lol', prefix: 'https://api.cors.lol/?url=', encode: true, custom: false },
+        { id: 'thingproxy', name: 'ThingProxy', prefix: 'https://thingproxy.freeboard.io/fetch/', encode: false, custom: false },
+      ];
+
+      /* ======================================================================
+         ESTADO GLOBAL DA APLICAÇÃO
+         ====================================================================== */
+      const state = {
+        proxies: [],
+        activeProxyId: null, // null significa Modo Direto (Fallback)
+        streamProxyEnabled: false,
+        autoFailoverEnabled: true,
+        bootCompleted: false,
+
+        currentPlaylist: OFFICIAL_PLAYLISTS[0],
+        allChannels: [],
+        filteredChannels: [],
+        renderedCount: 0,
+        activeCategory: 'Todas',
+        activeTab: 'all', // 'all' | 'favorites'
+        searchQuery: '',
+
+        favorites: loadFavorites(),
+        currentChannel: null,
+        hlsInstance: null,
+        streamAttemptedRoutes: new Set(),
+        activeStreamRouteLabel: 'Direta',
+      };
+
+      /* ======================================================================
+         REFERÊNCIAS DOM
+         ====================================================================== */
+      const dom = {
+        bootGate: document.getElementById('boot-gate'),
+        bootSubtitle: document.getElementById('boot-subtitle'),
+        bootStatusText: document.getElementById('boot-status-text'),
+        bootProgressBar: document.getElementById('boot-progress-bar'),
+        bootProgressPct: document.getElementById('boot-progress-pct'),
+        bootProxyList: document.getElementById('boot-proxy-list'),
+        bootSkipBtn: document.getElementById('boot-skip-btn'),
+        appShell: document.getElementById('app-shell'),
+
+        headerProxyDot: document.getElementById('header-proxy-dot'),
+        headerProxyLabel: document.getElementById('header-proxy-label'),
+        headerProxyLatency: document.getElementById('header-proxy-latency'),
+        openProxyModalBtn: document.getElementById('open-proxy-modal-btn'),
+        openImportModalBtn: document.getElementById('open-import-modal-btn'),
+        playlistPills: document.getElementById('playlist-pills'),
+
+        playerWrapper: document.getElementById('player-wrapper'),
+        video: document.getElementById('video-player'),
+        playerLogoBox: document.getElementById('player-channel-logo-box'),
+        playerTitle: document.getElementById('player-channel-title'),
+        playerGroup: document.getElementById('player-channel-group'),
+        streamStatusBadge: document.getElementById('stream-status-badge'),
+        streamRouteBadge: document.getElementById('stream-route-badge'),
+        playerIdleOverlay: document.getElementById('player-idle-overlay'),
+        playerLoadingOverlay: document.getElementById('player-loading-overlay'),
+        playerLoadingText: document.getElementById('player-loading-text'),
+        playerErrorOverlay: document.getElementById('player-error-overlay'),
+        playerErrorDetail: document.getElementById('player-error-detail'),
+        playerMetaInfo: document.getElementById('player-meta-info'),
+
+        errorTryNextProxyBtn: document.getElementById('error-try-next-proxy-btn'),
+        errorReloadBtn: document.getElementById('error-reload-btn'),
+        errorCopyBtn: document.getElementById('error-copy-btn'),
+
+        ctrlPlayBtn: document.getElementById('ctrl-play-btn'),
+        iconPlay: document.getElementById('icon-play'),
+        iconPause: document.getElementById('icon-pause'),
+        ctrlReloadBtn: document.getElementById('ctrl-reload-btn'),
+        ctrlMuteBtn: document.getElementById('ctrl-mute-btn'),
+        iconVolOn: document.getElementById('icon-vol-on'),
+        iconVolOff: document.getElementById('icon-vol-off'),
+        ctrlVolumeSlider: document.getElementById('ctrl-volume-slider'),
+        ctrlProxyToggleBtn: document.getElementById('ctrl-proxy-toggle-btn'),
+        ctrlProxyToggleLabel: document.getElementById('ctrl-proxy-toggle-label'),
+        ctrlFavBtn: document.getElementById('ctrl-fav-btn'),
+        ctrlFavIcon: document.getElementById('ctrl-fav-icon'),
+        ctrlCopyBtn: document.getElementById('ctrl-copy-btn'),
+        ctrlPipBtn: document.getElementById('ctrl-pip-btn'),
+        ctrlFullscreenBtn: document.getElementById('ctrl-fullscreen-btn'),
+        quickStreamProxySwitch: document.getElementById('quick-stream-proxy-switch'),
+
+        telemetryNodesBar: document.getElementById('telemetry-nodes-bar'),
+        telemetryRetestBtn: document.getElementById('telemetry-retest-btn'),
+        telemetryConfigBtn: document.getElementById('telemetry-config-btn'),
+
+        currentPlaylistName: document.getElementById('current-playlist-name'),
+        channelCounter: document.getElementById('channel-counter'),
+        tabAllBtn: document.getElementById('tab-all-btn'),
+        tabFavBtn: document.getElementById('tab-fav-btn'),
+        favCountBadge: document.getElementById('fav-count-badge'),
+        searchInput: document.getElementById('search-input'),
+        clearSearchBtn: document.getElementById('clear-search-btn'),
+        categoryChips: document.getElementById('category-chips'),
+        channelListContainer: document.getElementById('channel-list-container'),
+        listLoadingState: document.getElementById('list-loading-state'),
+        channelList: document.getElementById('channel-list'),
+        loadMoreContainer: document.getElementById('load-more-container'),
+        loadMoreBtn: document.getElementById('load-more-btn'),
+        listEmptyState: document.getElementById('list-empty-state'),
+        emptyStateTitle: document.getElementById('empty-state-title'),
+        emptyStateDesc: document.getElementById('empty-state-desc'),
+        retryPlaylistBtn: document.getElementById('retry-playlist-btn'),
+
+        proxyModal: document.getElementById('proxy-modal'),
+        closeProxyModalBtn: document.getElementById('close-proxy-modal-btn'),
+        modalStreamProxySwitch: document.getElementById('modal-stream-proxy-switch'),
+        modalFailoverSwitch: document.getElementById('modal-failover-switch'),
+        modalRetestAllBtn: document.getElementById('modal-retest-all-btn'),
+        modalProxyList: document.getElementById('modal-proxy-list'),
+        customProxyName: document.getElementById('custom-proxy-name'),
+        customProxyUrl: document.getElementById('custom-proxy-url'),
+        customProxyEncode: document.getElementById('custom-proxy-encode'),
+        addCustomProxyBtn: document.getElementById('add-custom-proxy-btn'),
+
+        importModal: document.getElementById('import-modal'),
+        closeImportModalBtn: document.getElementById('close-import-modal-btn'),
+        importUrlInput: document.getElementById('import-url-input'),
+        importUrlSubmitBtn: document.getElementById('import-url-submit-btn'),
+        importFileInput: document.getElementById('import-file-input'),
+
+        toastContainer: document.getElementById('toast-container'),
+      };
+
+      /* ======================================================================
+         UTILITÁRIOS: STORAGE, CLIPBOARD, TOASTS, SEGURANÇA HTML
+         ====================================================================== */
+      function loadFavorites() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEYS.FAVORITES);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function saveFavorites() {
+        try {
+          localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(state.favorites));
+        } catch (e) {
+          console.warn('Falha ao salvar favoritos:', e);
+        }
+      }
+
+      function loadCustomProxies() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEYS.CUSTOM_PROXIES);
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function saveCustomProxies() {
+        try {
+          const customOnly = state.proxies
+            .filter(p => p.custom)
+            .map(({ id, name, prefix, encode, custom }) => ({ id, name, prefix, encode, custom }));
+          localStorage.setItem(STORAGE_KEYS.CUSTOM_PROXIES, JSON.stringify(customOnly));
+        } catch (e) {
+          console.warn('Falha ao salvar proxies customizados:', e);
+        }
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      // Cópia compatível com iFrame via document.execCommand('copy')
+      function copyToClipboard(text, successMsg = 'Link copiado para a área de transferência') {
+        if (!text) return;
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'fixed';
+          textarea.style.top = '-9999px';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          textarea.setSelectionRange(0, text.length);
+          const ok = document.execCommand('copy');
+          document.body.removeChild(textarea);
+          if (ok) {
+            showToast(successMsg, 'success');
+          } else {
+            showToast('Não foi possível copiar o link.', 'error');
+          }
+        } catch (err) {
+          showToast('Erro ao copiar para área de transferência.', 'error');
+        }
+      }
+
+      // Notificação Toast translúcida (substitui alert/confirm)
+      function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        const colors = {
+          success: 'border-emerald-400/35 text-emerald-100',
+          error: 'border-rose-400/35 text-rose-100',
+          warning: 'border-amber-400/35 text-amber-100',
+          info: 'border-cyan-400/35 text-slate-100',
+        };
+        const icons = {
+          success: '<svg class="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>',
+          error: '<svg class="w-4 h-4 text-rose-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+          warning: '<svg class="w-4 h-4 text-amber-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+          info: '<svg class="w-4 h-4 text-cyan-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+        };
+
+        toast.className = `pointer-events-auto ios-glass-strong rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5 text-xs font-medium animate-fade-up ${colors[type] || colors.info}`;
+        toast.innerHTML = `${icons[type] || icons.info}<span>${escapeHtml(message)}</span>`;
+        dom.toastContainer.appendChild(toast);
+
+        setTimeout(() => {
+          toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(8px)';
+          setTimeout(() => toast.remove(), 320);
+        }, 3600);
+      }
+
+      /* ======================================================================
+         MOTOR DE PROXIES REMOTOS (BENCHMARK PARALELO + FAILOVER)
+         ====================================================================== */
+      function initProxyPool() {
+        const savedCustom = loadCustomProxies();
+        state.proxies = [...DEFAULT_PROXIES, ...savedCustom].map(p => ({
+          ...p,
+          status: 'idle', // 'idle' | 'testing' | 'online' | 'offline'
+          latency: null,
+        }));
+      }
+
+      function buildProxiedUrl(proxy, targetUrl) {
+        if (!proxy) return targetUrl;
+        // Evita encapsulamento duplicado caso a URL já contenha o prefixo
+        if (targetUrl.startsWith(proxy.prefix)) return targetUrl;
+        return proxy.encode
+          ? proxy.prefix + encodeURIComponent(targetUrl)
+          : proxy.prefix + targetUrl;
+      }
+
+      function getActiveProxy() {
+        if (!state.activeProxyId) return null;
+        return state.proxies.find(p => p.id === state.activeProxyId) || null;
+      }
+
+      function getHealthyProxiesSorted() {
+        return state.proxies
+          .filter(p => p.status === 'online')
+          .sort((a, b) => (a.latency ?? 99999) - (b.latency ?? 99999));
+      }
+
+      // Executa ping real de latência em um proxy com AbortController (4.5s timeout)
+      async function testSingleProxy(proxy) {
+        proxy.status = 'testing';
+        proxy.latency = null;
+        renderProxyViews();
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), PROXY_TIMEOUT_MS);
+        const start = performance.now();
+
+        try {
+          // Cache-buster leve para medir latência real sem cache estático do proxy
+          const targetWithBust = `${TEST_TARGET_URL}?t=${Date.now()}`;
+          const proxied = buildProxiedUrl(proxy, targetWithBust);
+          const response = await fetch(proxied, {
+            method: 'GET',
+            signal: controller.signal,
+            cache: 'no-store',
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const body = await response.text();
+          if (!body || body.trim().length < 15) {
+            throw new Error('Resposta vazia');
+          }
+
+          const elapsed = Math.max(12, Math.round(performance.now() - start));
+          proxy.status = 'online';
+          proxy.latency = elapsed;
+          clearTimeout(timer);
+          renderProxyViews();
+          return { proxy, ok: true, latency: elapsed };
+        } catch (err) {
+          clearTimeout(timer);
+          proxy.status = 'offline';
+          proxy.latency = null;
+          renderProxyViews();
+          return { proxy, ok: false, error: err.message };
+        }
+      }
+
+      // Handshake inicial na Tela de Boot (paralelo com seleção imediata do mais rápido)
+      async function runBootProxyHandshake() {
+        let completedCount = 0;
+        let lockedWinner = null;
+        const total = state.proxies.length;
+
+        // Mostra botão de contingência após 2.2s caso a rede esteja lenta
+        const skipTimer = setTimeout(() => {
+          if (!state.bootCompleted) {
+            dom.bootSkipBtn.classList.remove('hidden');
+          }
+        }, 2200);
+
+        renderBootProxyRows();
+
+        const updateBootProgress = () => {
+          const pct = Math.min(100, Math.round((completedCount / total) * 100));
+          dom.bootProgressBar.style.width = `${pct}%`;
+          dom.bootProgressPct.textContent = `${pct}%`;
+        };
+
+        const promises = state.proxies.map(async (proxy) => {
+          const result = await testSingleProxy(proxy);
+          completedCount++;
+          updateBootProgress();
+          renderBootProxyRows();
+
+          // O primeiro proxy a responder com sucesso em paralelo é o mais rápido
+          if (result.ok && !lockedWinner && !state.bootCompleted) {
+            lockedWinner = result.proxy;
+            state.activeProxyId = lockedWinner.id;
+            updateProxyHeaderBadge();
+
+            dom.bootProgressBar.style.width = '100%';
+            dom.bootProgressPct.textContent = '100%';
+            dom.bootStatusText.innerHTML = `
+              <svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span class="text-emerald-300 font-semibold">Conectado via ${escapeHtml(lockedWinner.name)} (${lockedWinner.latency} ms)</span>
+            `;
+            dom.bootSubtitle.textContent = 'Conexão estável verificada. Carregando listas de canais...';
+
+            clearTimeout(skipTimer);
+            setTimeout(() => finishBootAndEnterApp(), 850);
+          }
+
+          return result;
+        });
+
+        await Promise.allSettled(promises);
+        clearTimeout(skipTimer);
+
+        // Se nenhum proxy público respondeu, aplica failover inteligente para Modo Direto
+        if (!lockedWinner && !state.bootCompleted) {
+          state.activeProxyId = null;
+          updateProxyHeaderBadge();
+          dom.bootProgressBar.style.width = '100%';
+          dom.bootProgressPct.textContent = '100%';
+          dom.bootStatusText.innerHTML = `
+            <svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span class="text-amber-300 font-semibold">Proxies ocupados — Ativando Conexão Direta (GitHub Raw)</span>
+          `;
+          dom.bootSubtitle.textContent = 'Failover automático concluído. Você pode adicionar um proxy próprio na Central.';
+          setTimeout(() => finishBootAndEnterApp(true), 1100);
+        }
+      }
+
+      function finishBootAndEnterApp(isFallbackDirect = false) {
+        if (state.bootCompleted) return;
+        state.bootCompleted = true;
+
+        dom.bootGate.style.opacity = '0';
+        dom.bootGate.style.transform = 'scale(1.03)';
+        dom.bootGate.style.pointerEvents = 'none';
+
+        dom.appShell.classList.remove('opacity-0', 'pointer-events-none');
+
+        setTimeout(() => {
+          dom.bootGate.classList.add('hidden');
+        }, 700);
+
+        updateProxyHeaderBadge();
+        renderProxyViews();
+        loadPlaylist(state.currentPlaylist);
+
+        if (isFallbackDirect) {
+          showToast('Modo Direto ativado (GitHub Raw com CORS nativo).', 'warning');
+        } else {
+          const active = getActiveProxy();
+          if (active) {
+            showToast(`Túnel ativo via ${active.name} (${active.latency} ms)`, 'success');
+          }
+        }
+      }
+
+      // Re-testa todos os proxies a partir da Telemetria ou Modal
+      async function retestAllProxies() {
+        showToast('Testando latência de todos os proxies...', 'info');
+        const results = await Promise.allSettled(state.proxies.map(p => testSingleProxy(p)));
+        const healthy = getHealthyProxiesSorted();
+
+        if (healthy.length > 0) {
+          const current = getActiveProxy();
+          if (!current || current.status !== 'online') {
+            state.activeProxyId = healthy[0].id;
+          }
+          showToast(`${healthy.length} proxy(s) online. Mais rápido: ${healthy[0].name} (${healthy[0].latency} ms)`, 'success');
+        } else {
+          state.activeProxyId = null;
+          showToast('Nenhum proxy respondeu agora. Mantendo Conexão Direta.', 'warning');
+        }
+
+        updateProxyHeaderBadge();
+        renderProxyViews();
+      }
+
+      function selectProxy(proxyId) {
+        state.activeProxyId = proxyId; // null = Modo Direto
+        updateProxyHeaderBadge();
+        renderProxyViews();
+        const active = getActiveProxy();
+        if (active) {
+          showToast(`Proxy alterado para ${active.name}`, 'success');
+        } else {
+          showToast('Conexão Direta selecionada', 'info');
+        }
+      }
+
+      function renderBootProxyRows() {
+        dom.bootProxyList.innerHTML = state.proxies.map(p => {
+          const isWinner = state.activeProxyId === p.id && p.status === 'online';
+          let badgeHtml = '';
+
+          if (p.status === 'testing' || p.status === 'idle') {
+            badgeHtml = `
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-cyan-300">
+                <svg class="w-3 h-3 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                  <path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/>
+                </svg>
+                Testando
+              </span>`;
+          } else if (p.status === 'online') {
+            const latencyColor = p.latency < 700 ? 'text-emerald-300' : 'text-amber-300';
+            badgeHtml = `
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold ${latencyColor} tabular-nums">
+                <span class="w-2 h-2 rounded-full ${p.latency < 700 ? 'bg-emerald-400' : 'bg-amber-400'}"></span>
+                Online • ${p.latency} ms
+              </span>`;
+          } else {
+            badgeHtml = `
+              <span class="inline-flex items-center gap-1.5 text-[11px] font-medium text-rose-400">
+                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                Indisponível
+              </span>`;
+          }
+
+          return `
+            <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl border transition-all ${
+              isWinner
+                ? 'bg-emerald-500/15 border-emerald-400/45 shadow-md shadow-emerald-500/10'
+                : 'bg-white/[0.04] border-white/10'
+            }">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <svg class="w-4 h-4 ${isWinner ? 'text-emerald-300' : 'text-slate-400'} flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-white truncate">${escapeHtml(p.name)}</span>
+                    ${isWinner ? '<span class="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded-full bg-emerald-400/20 text-emerald-200">Ativo</span>' : ''}
+                  </div>
+                  <p class="text-[10px] text-slate-500 truncate">${escapeHtml(p.prefix)}</p>
+                </div>
+              </div>
+              <div class="flex-shrink-0 pl-2">${badgeHtml}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      function updateProxyHeaderBadge() {
+        const active = getActiveProxy();
+        if (active) {
+          const isOnline = active.status === 'online';
+          dom.headerProxyDot.className = `w-2 h-2 rounded-full ${
+            isOnline
+              ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
+              : 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]'
+          }`;
+          dom.headerProxyLabel.textContent = active.name;
+          dom.headerProxyLatency.textContent = active.latency ? `${active.latency} ms` : 'Ativo';
+        } else {
+          dom.headerProxyDot.className = 'w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]';
+          dom.headerProxyLabel.textContent = 'Modo Direto';
+          dom.headerProxyLatency.textContent = 'Fallback';
+        }
+      }
+
+      function renderProxyViews() {
+        renderBootProxyRows();
+        renderTelemetryBar();
+        renderProxyModalList();
+        updateProxyHeaderBadge();
+      }
+
+      function renderTelemetryBar() {
+        const nodesHtml = state.proxies.map(p => {
+          const isSelected = state.activeProxyId === p.id;
+          let dotColor = 'bg-slate-500';
+          let latencyText = '--';
+          if (p.status === 'testing') {
+            dotColor = 'bg-cyan-400 animate-pulse';
+            latencyText = '...';
+          } else if (p.status === 'online') {
+            dotColor = p.latency < 700 ? 'bg-emerald-400' : 'bg-amber-400';
+            latencyText = `${p.latency}ms`;
+          } else if (p.status === 'offline') {
+            dotColor = 'bg-rose-500';
+            latencyText = 'OFF';
+          }
+
+          return `
+            <button
+              type="button"
+              data-proxy-select="${escapeHtml(p.id)}"
+              class="m3-btn flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium flex items-center gap-2 border transition-all ${
+                isSelected
+                  ? 'bg-indigo-500/25 border-indigo-400/60 text-white shadow-sm shadow-indigo-500/25'
+                  : 'bg-white/[0.04] hover:bg-white/[0.09] border-white/10 text-slate-300'
+              }"
+            >
+              <span class="w-2 h-2 rounded-full ${dotColor}"></span>
+              <span>${escapeHtml(p.name)}</span>
+              <span class="text-[10px] text-slate-400 tabular-nums">${latencyText}</span>
+            </button>
+          `;
+        }).join('');
+
+        const directSelected = state.activeProxyId === null;
+        const directBtn = `
+          <button
+            type="button"
+            data-proxy-select="__DIRECT__"
+            class="m3-btn flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium flex items-center gap-2 border transition-all ${
+              directSelected
+                ? 'bg-amber-500/20 border-amber-400/55 text-amber-100'
+                : 'bg-white/[0.04] hover:bg-white/[0.09] border-white/10 text-slate-300'
+            }"
+          >
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>Direto</span>
+          </button>
+        `;
+
+        dom.telemetryNodesBar.innerHTML = nodesHtml + directBtn;
+      }
+
+      function renderProxyModalList() {
+        const directSelected = state.activeProxyId === null;
+        const itemsHtml = state.proxies.map(p => {
+          const isSelected = state.activeProxyId === p.id;
+          let statusLabel = 'Aguardando';
+          let statusCls = 'text-slate-400 bg-white/5';
+
+          if (p.status === 'testing') {
+            statusLabel = 'Testando...';
+            statusCls = 'text-cyan-300 bg-cyan-500/15';
+          } else if (p.status === 'online') {
+            statusLabel = `${p.latency} ms`;
+            statusCls = p.latency < 700 ? 'text-emerald-300 bg-emerald-500/15' : 'text-amber-300 bg-amber-500/15';
+          } else if (p.status === 'offline') {
+            statusLabel = 'Offline';
+            statusCls = 'text-rose-300 bg-rose-500/15';
+          }
+
+          return `
+            <div class="flex items-center justify-between gap-3 p-3 rounded-2xl border transition-all ${
+              isSelected
+                ? 'bg-indigo-500/20 border-indigo-400/55'
+                : 'bg-white/[0.04] border-white/10 hover:bg-white/[0.07]'
+            }">
+              <button type="button" data-proxy-select="${escapeHtml(p.id)}" class="flex-1 text-left flex items-center gap-3 min-w-0">
+                <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                  isSelected ? 'border-cyan-400' : 'border-slate-500'
+                }">
+                  ${isSelected ? '<div class="w-2 h-2 rounded-full bg-cyan-400"></div>' : ''}
+                </div>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold text-white truncate">${escapeHtml(p.name)}</span>
+                    ${p.custom ? '<span class="px-1.5 py-0.5 text-[9px] rounded-full bg-cyan-500/20 text-cyan-200">Custom</span>' : ''}
+                  </div>
+                  <p class="text-[11px] text-slate-400 truncate">${escapeHtml(p.prefix)}</p>
+                </div>
+              </button>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold tabular-nums ${statusCls}">${statusLabel}</span>
+                ${p.custom ? `
+                  <button type="button" data-remove-proxy="${escapeHtml(p.id)}" class="w-7 h-7 rounded-full hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 flex items-center justify-center" title="Remover proxy">
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                  </button>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        const directRow = `
+          <div class="flex items-center justify-between gap-3 p-3 rounded-2xl border transition-all ${
+            directSelected
+              ? 'bg-amber-500/15 border-amber-400/50'
+              : 'bg-white/[0.04] border-white/10 hover:bg-white/[0.07]'
+          }">
+            <button type="button" data-proxy-select="__DIRECT__" class="flex-1 text-left flex items-center gap-3 min-w-0">
+              <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                directSelected ? 'border-amber-400' : 'border-slate-500'
+              }">
+                ${directSelected ? '<div class="w-2 h-2 rounded-full bg-amber-400"></div>' : ''}
+              </div>
+              <div class="min-w-0">
+                <span class="text-xs font-semibold text-white">Conexão Direta (Sem Proxy)</span>
+                <p class="text-[11px] text-slate-400 truncate">Ideal para GitHub Raw quando todos os proxies públicos atingem rate-limit</p>
+              </div>
+            </button>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold text-amber-200 bg-amber-500/15">Fallback</span>
+          </div>
+        `;
+
+        dom.modalProxyList.innerHTML = itemsHtml + directRow;
+      }
+
+      /* ======================================================================
+         BUSCA INTELIGENTE COM FAILOVER DE PROXY PARA LISTAS M3U8
+         ====================================================================== */
+      async function fetchWithProxyFailover(targetUrl) {
+        const routeQueue = [];
+        const active = getActiveProxy();
+
+        // 1. Proxy ativo selecionado
+        if (active) routeQueue.push(active);
+
+        // 2. Demais proxies saudáveis ordenados por latência
+        for (const p of getHealthyProxiesSorted()) {
+          if (!routeQueue.some(r => r && r.id === p.id)) {
+            routeQueue.push(p);
+          }
+        }
+
+        // 3. Fallback direto (especialmente eficaz para raw.githubusercontent.com)
+        routeQueue.push(null);
+
+        let lastError = null;
+
+        for (const proxy of routeQueue) {
+          const urlToFetch = proxy ? buildProxiedUrl(proxy, targetUrl) : targetUrl;
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 9000);
+
+          try {
+            const resp = await fetch(urlToFetch, { signal: controller.signal });
+            clearTimeout(timer);
+
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const text = await resp.text();
+            if (!text || (!text.includes('#EXTM3U') && !text.includes('#EXTINF'))) {
+              throw new Error('Conteúdo não parece ser uma playlist M3U8 válida');
+            }
+
+            // Se precisou cair em outro proxy saudável, atualiza o ativo
+            if (proxy && proxy.id !== state.activeProxyId) {
+              state.activeProxyId = proxy.id;
+              updateProxyHeaderBadge();
+              renderProxyViews();
+            }
+
+            return { text, usedProxy: proxy };
+          } catch (err) {
+            clearTimeout(timer);
+            lastError = err;
+          }
+        }
+
+        throw lastError || new Error('Falha ao baixar a playlist em todas as rotas.');
+      }
+
+      /* ======================================================================
+         PARSER M3U8 DE ALTA PERFORMANCE
+         ====================================================================== */
+      function parseM3U8(rawText) {
+        const lines = rawText.split(/\r?\n/);
+        const channels = [];
+        let pendingMeta = null;
+
+        const attrRegex = /([a-zA-Z0-9_-]+)\s*=\s*"([^"]*)"/g;
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+
+          if (line.startsWith('#EXTINF:')) {
+            const attrs = {};
+            let match;
+            attrRegex.lastIndex = 0;
+            while ((match = attrRegex.exec(line)) !== null) {
+              attrs[match[1].toLowerCase()] = match[2].trim();
+            }
+
+            // Nome do canal fica após a última vírgula fora de aspas (ou última vírgula geral)
+            const commaIdx = line.lastIndexOf(',');
+            const displayName = commaIdx !== -1 ? line.slice(commaIdx + 1).trim() : '';
+
+            pendingMeta = {
+              name: displayName || attrs['tvg-name'] || 'Canal sem nome',
+              tvgName: attrs['tvg-name'] || '',
+              logo: attrs['tvg-logo'] || '',
+              group: attrs['group-title'] || 'Geral',
+            };
+          } else if (line.startsWith('#EXTGRP:') && pendingMeta) {
+            const grp = line.slice(8).trim();
+            if (grp && pendingMeta.group === 'Geral') {
+              pendingMeta.group = grp;
+            }
+          } else if (!line.startsWith('#')) {
+            // Linha de URL do stream
+            if (/^https?:\/\//i.test(line)) {
+              const meta = pendingMeta || {
+                name: `Stream #${channels.length + 1}`,
+                tvgName: '',
+                logo: '',
+                group: 'Geral',
+              };
+
+              channels.push({
+                id: `${channels.length}_${line}`,
+                name: meta.name,
+                tvgName: meta.tvgName,
+                logo: meta.logo,
+                group: meta.group || 'Geral',
+                url: line,
+                searchKey: `${meta.name} ${meta.tvgName} ${meta.group}`.toLowerCase(),
+              });
+            }
+            pendingMeta = null;
+          }
+        }
+
+        return channels;
+      }
+
+      /* ======================================================================
+         CARREGAMENTO E RENDERIZAÇÃO INCREMENTAL DE CANAIS
+         ====================================================================== */
+      function renderPlaylistPills() {
+        dom.playlistPills.innerHTML = OFFICIAL_PLAYLISTS.map(pl => {
+          const isActive = state.currentPlaylist && state.currentPlaylist.id === pl.id;
+          return `
+            <button
+              type="button"
+              data-playlist-id="${escapeHtml(pl.id)}"
+              class="m3-btn ios-pill flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
+                isActive ? 'active' : 'text-slate-300'
+              }"
+            >
+              <svg class="w-3.5 h-3.5 opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                ${
+                  pl.id === 'filmes-series'
+                    ? '<rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>'
+                    : '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M17 2l-5 5-5-5"/>'
+                }
+              </svg>
+              <span>${escapeHtml(pl.name)}</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      async function loadPlaylist(playlistObj) {
+        state.currentPlaylist = playlistObj;
+        state.activeCategory = 'Todas';
+        state.searchQuery = '';
+        dom.searchInput.value = '';
+        dom.clearSearchBtn.classList.add('hidden');
+        dom.currentPlaylistName.textContent = playlistObj.name;
+        dom.channelCounter.textContent = 'Carregando canais via proxy...';
+
+        renderPlaylistPills();
+        dom.channelList.innerHTML = '';
+        dom.categoryChips.innerHTML = '';
+        dom.listEmptyState.classList.add('hidden');
+        dom.loadMoreContainer.classList.add('hidden');
+        dom.listLoadingState.classList.remove('hidden');
+
+        try {
+          const { text, usedProxy } = await fetchWithProxyFailover(playlistObj.url);
+          const parsed = parseM3U8(text);
+          state.allChannels = parsed;
+
+          dom.listLoadingState.classList.add('hidden');
+          buildCategoryChips();
+          applyFiltersAndRender();
+
+          const routeName = usedProxy ? `via ${usedProxy.name}` : 'via Conexão Direta';
+          showToast(`${parsed.length.toLocaleString('pt-BR')} itens carregados (${routeName})`, 'success');
+        } catch (err) {
+          console.error('Erro ao carregar playlist:', err);
+          state.allChannels = [];
+          dom.listLoadingState.classList.add('hidden');
+          dom.channelCounter.textContent = 'Erro ao carregar lista';
+          dom.listEmptyState.classList.remove('hidden');
+          dom.emptyStateTitle.textContent = 'Não foi possível carregar esta lista';
+          dom.emptyStateDesc.textContent = 'Verifique sua conexão ou teste outro proxy na Central de Controle.';
+          dom.retryPlaylistBtn.classList.remove('hidden');
+          showToast('Falha ao baixar lista M3U8. Tente trocar o proxy.', 'error');
+        }
+      }
+
+      function loadRawPlaylistContent(name, rawText) {
+        state.currentPlaylist = { id: 'custom-local', name, url: '' };
+        state.activeCategory = 'Todas';
+        state.searchQuery = '';
+        dom.searchInput.value = '';
+        dom.currentPlaylistName.textContent = name;
+        renderPlaylistPills();
+
+        const parsed = parseM3U8(rawText);
+        state.allChannels = parsed;
+        dom.listLoadingState.classList.add('hidden');
+        buildCategoryChips();
+        applyFiltersAndRender();
+        showToast(`${parsed.length.toLocaleString('pt-BR')} itens importados com sucesso!`, 'success');
+      }
+
+      function buildCategoryChips() {
+        const counts = new Map();
+        for (const ch of state.allChannels) {
+          const grp = ch.group || 'Geral';
+          counts.set(grp, (counts.get(grp) || 0) + 1);
+        }
+
+        // Ordena categorias por quantidade (mais populares primeiro)
+        const sortedGroups = Array.from(counts.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 60);
+
+        const chips = [
+          { name: 'Todas', count: state.allChannels.length },
+          ...sortedGroups.map(([name, count]) => ({ name, count })),
+        ];
+
+        dom.categoryChips.innerHTML = chips.map(cat => {
+          const isActive = state.activeCategory === cat.name;
+          return `
+            <button
+              type="button"
+              data-category="${escapeHtml(cat.name)}"
+              class="m3-btn flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
+                isActive
+                  ? 'bg-indigo-500/30 border-indigo-400/60 text-white'
+                  : 'bg-white/[0.04] hover:bg-white/[0.09] border-white/10 text-slate-300'
+              }"
+            >
+              ${escapeHtml(cat.name)} <span class="opacity-60 ml-0.5 tabular-nums">${cat.count}</span>
+            </button>
+          `;
+        }).join('');
+      }
+
+      function updateFavBadge() {
+        const count = Object.keys(state.favorites).length;
+        dom.favCountBadge.textContent = count;
+      }
+
+      function applyFiltersAndRender() {
+        updateFavBadge();
+        const q = state.searchQuery.trim().toLowerCase();
+
+        // Fonte: lista atual ou todos os favoritos salvos
+        const source = state.activeTab === 'favorites'
+          ? Object.values(state.favorites)
+          : state.allChannels;
+
+        state.filteredChannels = source.filter(ch => {
+          if (state.activeTab === 'all' && state.activeCategory !== 'Todas' && ch.group !== state.activeCategory) {
+            return false;
+          }
+          if (q && !(ch.searchKey || `${ch.name} ${ch.group}`.toLowerCase()).includes(q)) {
+            return false;
+          }
+          return true;
+        });
+
+        state.renderedCount = 0;
+        dom.channelList.innerHTML = '';
+        dom.channelListContainer.scrollTop = 0;
+
+        const total = state.filteredChannels.length;
+        dom.channelCounter.textContent = `${total.toLocaleString('pt-BR')} ${total === 1 ? 'item' : 'itens'} disponíveis`;
+
+        if (total === 0) {
+          dom.loadMoreContainer.classList.add('hidden');
+          dom.listEmptyState.classList.remove('hidden');
+          dom.retryPlaylistBtn.classList.add('hidden');
+          if (state.activeTab === 'favorites') {
+            dom.emptyStateTitle.textContent = 'Nenhum canal favorito ainda';
+            dom.emptyStateDesc.textContent = 'Toque no ícone de coração em qualquer canal para fixá-lo aqui.';
+          } else {
+            dom.emptyStateTitle.textContent = 'Nenhum resultado encontrado';
+            dom.emptyStateDesc.textContent = 'Tente outro termo de busca ou selecione "Todas" nas categorias.';
+          }
+          return;
+        }
+
+        dom.listEmptyState.classList.add('hidden');
+        renderNextBatch();
+      }
+
+      function renderNextBatch() {
+        const start = state.renderedCount;
+        const end = Math.min(start + PAGE_SIZE, state.filteredChannels.length);
+        if (start >= end) {
+          dom.loadMoreContainer.classList.add('hidden');
+          return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        const fallbackSvg = `
+          <svg class="w-5 h-5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <rect x="2" y="7" width="20" height="14" rx="2.5"/>
+            <path d="M17 2l-5 5-5-5"/>
+          </svg>
+        `;
+
+        for (let i = start; i < end; i++) {
+          const ch = state.filteredChannels[i];
+          const isPlaying = state.currentChannel && state.currentChannel.url === ch.url;
+          const isFav = Boolean(state.favorites[ch.url]);
+
+          const row = document.createElement('div');
+          row.className = `channel-card rounded-2xl p-2.5 flex items-center gap-3 cursor-pointer ${isPlaying ? 'playing' : ''}`;
+          row.dataset.channelIndex = String(i);
+
+          const logoHtml = ch.logo
+            ? `<img src="${escapeHtml(ch.logo)}" alt="" loading="lazy" class="w-full h-full object-contain p-1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div style="display:none" class="w-full h-full items-center justify-center">${fallbackSvg}</div>`
+            : `<div class="w-full h-full flex items-center justify-center">${fallbackSvg}</div>`;
+
+          row.innerHTML = `
+            <div class="w-11 h-11 rounded-xl bg-black/40 border border-white/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
+              ${logoHtml}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-1.5">
+                <p class="text-xs sm:text-[13px] font-semibold text-white truncate">${escapeHtml(ch.name)}</p>
+                ${isPlaying ? '<span class="w-1.5 h-1.5 rounded-full bg-cyan-400 live-dot flex-shrink-0"></span>' : ''}
+              </div>
+              <p class="text-[11px] text-slate-400 truncate mt-0.5">${escapeHtml(ch.group || 'Geral')}</p>
+            </div>
+            <button
+              type="button"
+              data-fav-url="${escapeHtml(ch.url)}"
+              data-fav-idx="${i}"
+              class="m3-btn w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                isFav ? 'text-rose-400 bg-rose-500/15' : 'text-slate-500 hover:text-slate-200 hover:bg-white/10'
+              }"
+              title="${isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
+          `;
+
+          fragment.appendChild(row);
+        }
+
+        dom.channelList.appendChild(fragment);
+        state.renderedCount = end;
+
+        const remaining = state.filteredChannels.length - state.renderedCount;
+        if (remaining > 0) {
+          dom.loadMoreContainer.classList.remove('hidden');
+          dom.loadMoreBtn.textContent = `Carregar mais (${remaining.toLocaleString('pt-BR')} restantes)`;
+        } else {
+          dom.loadMoreContainer.classList.add('hidden');
+        }
+      }
+
+      function toggleFavorite(channel) {
+        if (!channel || !channel.url) return;
+        if (state.favorites[channel.url]) {
+          delete state.favorites[channel.url];
+          showToast(`"${channel.name}" removido dos favoritos`, 'info');
+        } else {
+          state.favorites[channel.url] = {
+            id: channel.id,
+            name: channel.name,
+            tvgName: channel.tvgName || '',
+            logo: channel.logo || '',
+            group: channel.group || 'Geral',
+            url: channel.url,
+            searchKey: `${channel.name} ${channel.group}`.toLowerCase(),
+          };
+          showToast(`"${channel.name}" salvo nos favoritos`, 'success');
+        }
+        saveFavorites();
+        updateFavBadge();
+        updatePlayerFavIcon();
+
+        if (state.activeTab === 'favorites') {
+          applyFiltersAndRender();
+        } else {
+          // Atualiza visualmente o botão do item renderizado sem resetar scroll
+          const btns = dom.channelList.querySelectorAll('button[data-fav-url]');
+          btns.forEach(btn => {
+            if (btn.dataset.favUrl === channel.url) {
+              const isFav = Boolean(state.favorites[channel.url]);
+              btn.className = `m3-btn w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                isFav ? 'text-rose-400 bg-rose-500/15' : 'text-slate-500 hover:text-slate-200 hover:bg-white/10'
+              }`;
+              const svg = btn.querySelector('svg');
+              if (svg) svg.setAttribute('fill', isFav ? 'currentColor' : 'none');
+            }
+          });
+        }
+      }
+
+      /* ======================================================================
+         PLAYER HLS.JS COM LOADER CUSTOMIZADO E AUTO-FAILOVER DE PROXY
+         ====================================================================== */
+      function destroyCurrentHls() {
+        if (state.hlsInstance) {
+          try {
+            state.hlsInstance.destroy();
+          } catch (e) {}
+          state.hlsInstance = null;
+        }
+        dom.video.pause();
+        dom.video.removeAttribute('src');
+        dom.video.load();
+      }
+
+      function setStreamStatus(mode, customText = '') {
+        const badge = dom.streamStatusBadge;
+        if (mode === 'live') {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 backdrop-blur-md border border-emerald-400/40 text-emerald-200';
+          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 live-dot"></span>AO VIVO';
+        } else if (mode === 'buffering') {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-cyan-500/20 backdrop-blur-md border border-cyan-400/35 text-cyan-200';
+          badge.innerHTML = '<svg class="w-3 h-3 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg>BUFFERIZANDO';
+        } else if (mode === 'error') {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/20 backdrop-blur-md border border-rose-400/40 text-rose-200';
+          badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>OFFLINE';
+        } else {
+          badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 backdrop-blur-md border border-white/15 text-slate-200';
+          badge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>${escapeHtml(customText || 'AGUARDANDO')}`;
+        }
+      }
+
+      function updatePlayerFavIcon() {
+        const isFav = state.currentChannel && Boolean(state.favorites[state.currentChannel.url]);
+        dom.ctrlFavIcon.setAttribute('fill', isFav ? 'currentColor' : 'none');
+        dom.ctrlFavBtn.classList.toggle('text-rose-400', isFav);
+        dom.ctrlFavBtn.classList.toggle('text-slate-200', !isFav);
+      }
+
+      function updateStreamProxySwitches() {
+        const isOn = state.streamProxyEnabled;
+        [dom.quickStreamProxySwitch, dom.modalStreamProxySwitch].forEach(sw => {
+          sw.classList.toggle('on', isOn);
+          sw.setAttribute('aria-checked', String(isOn));
+        });
+        dom.ctrlProxyToggleLabel.textContent = isOn ? 'Proxy: ON' : 'Proxy: Auto';
+        dom.ctrlProxyToggleBtn.classList.toggle('border-cyan-400/50', isOn);
+        dom.ctrlProxyToggleBtn.classList.toggle('bg-cyan-500/20', isOn);
+      }
+
+      function playChannel(channel, forcedProxy = undefined) {
+        if (!channel || !channel.url) return;
+
+        // Se for uma nova seleção manual, reseta o histórico de failover
+        if (forcedProxy === undefined) {
+          state.currentChannel = channel;
+          state.streamAttemptedRoutes.clear();
+          highlightPlayingCard(channel.url);
+        }
+
+        // Atualiza UI do cabeçalho do player
+        dom.playerIdleOverlay.classList.add('hidden');
+        dom.playerErrorOverlay.classList.add('hidden');
+        dom.playerLoadingOverlay.classList.remove('hidden');
+        dom.playerTitle.textContent = channel.name;
+        dom.playerGroup.textContent = channel.group || 'IPTV Brasil 2026';
+        updatePlayerFavIcon();
+
+        if (channel.logo) {
+          dom.playerLogoBox.innerHTML = `<img src="${escapeHtml(channel.logo)}" alt="" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<svg class=&quot;w-5 h-5 text-cyan-300&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot;><rect x=&quot;2&quot; y=&quot;7&quot; width=&quot;20&quot; height=&quot;14&quot; rx=&quot;3&quot;/><path d=&quot;M17 2l-5 5-5-5&quot;/></svg>';" />`;
+        } else {
+          dom.playerLogoBox.innerHTML = `<svg class="w-5 h-5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="3"/><path d="M17 2l-5 5-5-5"/></svg>`;
+        }
+
+        // Define qual rota usar nesta tentativa
+        let routeProxy = null;
+        if (forcedProxy !== undefined) {
+          routeProxy = forcedProxy;
+        } else if (state.streamProxyEnabled) {
+          routeProxy = getActiveProxy() || getHealthyProxiesSorted()[0] || null;
+        } else {
+          routeProxy = null; // Começa direto; se falhar por CORS, failover ativa o proxy automaticamente
+        }
+
+        const routeKey = routeProxy ? routeProxy.id : '__DIRECT__';
+        state.streamAttemptedRoutes.add(routeKey);
+        state.activeStreamRouteLabel = routeProxy ? `Via Proxy: ${routeProxy.name}` : 'Conexão Direta';
+
+        dom.streamRouteBadge.textContent = state.activeStreamRouteLabel;
+        dom.playerLoadingText.textContent = routeProxy
+          ? `Conectando via ${routeProxy.name}...`
+          : 'Conectando diretamente ao stream...';
+        dom.playerMetaInfo.textContent = `${state.activeStreamRouteLabel} • Auto-Failover ${state.autoFailoverEnabled ? 'ativo' : 'desligado'}`;
+        setStreamStatus('buffering');
+
+        startStreamPlayback(channel.url, routeProxy);
+
+        // No mobile, rola suavemente para o player ao escolher um canal
+        if (window.innerWidth < 1024 && forcedProxy === undefined) {
+          dom.playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+
+      function startStreamPlayback(streamUrl, routeProxy) {
+        destroyCurrentHls();
+
+        const isDirectVideoFile = /\.(mp4|mkv|webm|mov)(\?|$)/i.test(streamUrl);
+
+        // 1. Arquivos MP4/MKV diretos (comum em Filmes & Séries)
+        if (isDirectVideoFile) {
+          dom.video.src = routeProxy ? buildProxiedUrl(routeProxy, streamUrl) : streamUrl;
+          dom.video.play().catch(() => {});
+          return;
+        }
+
+        // 2. Reprodução via HLS.js (Desktop / Android / Navegadores modernos)
+        if (window.Hls && window.Hls.isSupported()) {
+          const BaseLoader = window.Hls.DefaultConfig.loader;
+
+          // Loader personalizado que encapsula requisições via proxy ativo sem quebrar resolução de URLs relativas
+          class ProxyAwareLoader extends BaseLoader {
+            load(context, config, callbacks) {
+              if (routeProxy && context && context.url && /^https?:\/\//i.test(context.url)) {
+                const proxiedContext = Object.assign({}, context, {
+                  url: buildProxiedUrl(routeProxy, context.url),
+                });
+                super.load(proxiedContext, config, callbacks);
+              } else {
+                super.load(context, config, callbacks);
+              }
+            }
+          }
+
+          const hls = new window.Hls({
+            enableWorker: true,
+            lowLatencyMode: true,
+            maxBufferLength: 24,
+            manifestLoadingTimeOut: 9000,
+            levelLoadingTimeOut: 9000,
+            fragLoadingTimeOut: 12000,
+            loader: routeProxy ? ProxyAwareLoader : BaseLoader,
+          });
+
+          state.hlsInstance = hls;
+          hls.loadSource(streamUrl);
+          hls.attachMedia(dom.video);
+
+          hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
+            dom.video.play().catch(() => {
+              // Autoplay bloqueado: usuário pode clicar em play
+              dom.playerLoadingOverlay.classList.add('hidden');
+            });
+          });
+
+          hls.on(window.Hls.Events.ERROR, (event, data) => {
+            if (!data.fatal) return;
+
+            if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR) {
+              hls.recoverMediaError();
+              return;
+            }
+
+            // Erro fatal de rede / CORS -> Aciona Auto-Failover de Proxy
+            handleStreamFailure(`Erro de rede (${data.details || 'CORS/Timeout'})`);
+          });
+
+          return;
+        }
+
+        // 3. Fallback Nativo para Safari / iOS
+        if (dom.video.canPlayType('application/vnd.apple.mpegurl')) {
+          dom.video.src = routeProxy ? buildProxiedUrl(routeProxy, streamUrl) : streamUrl;
+          dom.video.play().catch(() => {});
+          return;
+        }
+
+        showPlayerError('Seu navegador não suporta reprodução de streams HLS (.m3u8).');
+      }
+
+      function handleStreamFailure(reason) {
+        if (!state.currentChannel) return;
+
+        if (state.autoFailoverEnabled) {
+          const nextProxy = findNextUntriedProxy();
+          if (nextProxy !== undefined) {
+            const label = nextProxy ? nextProxy.name : 'Conexão Direta';
+            showToast(`Failover automático: tentando via ${label}...`, 'warning');
+            playChannel(state.currentChannel, nextProxy);
+            return;
+          }
+        }
+
+        showPlayerError(`Não foi possível reproduzir este canal (${reason}). Ele pode estar offline na origem ou exigir outro proxy.`);
+      }
+
+      // Encontra o próximo proxy saudável ainda não tentado para o canal atual
+      function findNextUntriedProxy() {
+        const candidates = [];
+        const active = getActiveProxy();
+
+        if (active && active.status !== 'offline') candidates.push(active);
+        for (const p of getHealthyProxiesSorted()) {
+          if (!candidates.some(c => c.id === p.id)) candidates.push(p);
+        }
+        // Também tenta proxies ainda não testados caso haja poucos online
+        for (const p of state.proxies) {
+          if (p.status !== 'offline' && !candidates.some(c => c.id === p.id)) {
+            candidates.push(p);
+          }
+        }
+
+        for (const p of candidates) {
+          if (!state.streamAttemptedRoutes.has(p.id)) {
+            return p;
+          }
+        }
+
+        if (!state.streamAttemptedRoutes.has('__DIRECT__')) {
+          return null;
+        }
+
+        return undefined; // Todas as rotas já foram tentadas
+      }
+
+      function showPlayerError(detail) {
+        destroyCurrentHls();
+        dom.playerLoadingOverlay.classList.add('hidden');
+        dom.playerErrorOverlay.classList.remove('hidden');
+        dom.playerErrorDetail.textContent = detail;
+        setStreamStatus('error');
+      }
+
+      function highlightPlayingCard(url) {
+        dom.channelList.querySelectorAll('.channel-card.playing').forEach(el => {
+          el.classList.remove('playing');
+        });
+        const idx = state.filteredChannels.findIndex(c => c.url === url);
+        if (idx !== -1) {
+          const card = dom.channelList.querySelector(`.channel-card[data-channel-index="${idx}"]`);
+          if (card) card.classList.add('playing');
+        }
+      }
+
+      /* ======================================================================
+         EVENTOS DO ELEMENTO DE VÍDEO E CONTROLES DO PLAYER
+         ====================================================================== */
+      function bindVideoEvents() {
+        const v = dom.video;
+
+        v.addEventListener('playing', () => {
+          dom.playerLoadingOverlay.classList.add('hidden');
+          dom.playerErrorOverlay.classList.add('hidden');
+          dom.iconPlay.classList.add('hidden');
+          dom.iconPause.classList.remove('hidden');
+          setStreamStatus('live');
+        });
+
+        v.addEventListener('pause', () => {
+          dom.iconPlay.classList.remove('hidden');
+          dom.iconPause.classList.add('hidden');
+        });
+
+        v.addEventListener('waiting', () => {
+          if (state.currentChannel) {
+            dom.playerLoadingOverlay.classList.remove('hidden');
+            setStreamStatus('buffering');
+          }
+        });
+
+        v.addEventListener('error', () => {
+          if (state.currentChannel && !state.hlsInstance) {
+            handleStreamFailure('Erro no stream direto');
+          }
+        });
+
+        v.addEventListener('volumechange', () => {
+          const muted = v.muted || v.volume === 0;
+          dom.iconVolOn.classList.toggle('hidden', muted);
+          dom.iconVolOff.classList.toggle('hidden', !muted);
+          dom.ctrlVolumeSlider.value = muted ? 0 : v.volume;
+        });
+
+        // Toque no vídeo alterna visibilidade dos controles em telas touch
+        let hideControlsTimer = null;
+        const showControlsTemporarily = () => {
+          dom.playerWrapper.classList.add('controls-visible');
+          clearTimeout(hideControlsTimer);
+          hideControlsTimer = setTimeout(() => {
+            if (!v.paused) dom.playerWrapper.classList.remove('controls-visible');
+          }, 3600);
+        };
+
+        dom.playerWrapper.addEventListener('mousemove', showControlsTemporarily);
+        dom.playerWrapper.addEventListener('touchstart', showControlsTemporarily, { passive: true });
+      }
+
+      /* ======================================================================
+         VINCULAÇÃO DE TODOS OS EVENTOS DE INTERFACE
+         ====================================================================== */
+      function bindUiEvents() {
+        // Botão de pular tela de boot para modo direto
+        dom.bootSkipBtn.addEventListener('click', () => {
+          state.activeProxyId = null;
+          finishBootAndEnterApp(true);
+        });
+
+        // Seleção de playlists oficiais
+        dom.playlistPills.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-playlist-id]');
+          if (!btn) return;
+          const pl = OFFICIAL_PLAYLISTS.find(p => p.id === btn.dataset.playlistId);
+          if (pl) {
+            state.activeTab = 'all';
+            updateTabButtons();
+            loadPlaylist(pl);
+          }
+        });
+
+        // Abas Todos / Favoritos
+        const updateTabButtons = () => {
+          const isAll = state.activeTab === 'all';
+          dom.tabAllBtn.className = `m3-btn px-3 py-1 rounded-full text-xs font-semibold ${
+            isAll ? 'bg-white/15 text-white shadow-sm' : 'text-slate-400 hover:text-white'
+          }`;
+          dom.tabFavBtn.className = `m3-btn px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 ${
+            !isAll ? 'bg-rose-500/25 text-rose-100 shadow-sm' : 'text-slate-400 hover:text-white'
+          }`;
+          dom.categoryChips.classList.toggle('hidden', !isAll);
+        };
+
+        dom.tabAllBtn.addEventListener('click', () => {
+          state.activeTab = 'all';
+          updateTabButtons();
+          applyFiltersAndRender();
+        });
+
+        dom.tabFavBtn.addEventListener('click', () => {
+          state.activeTab = 'favorites';
+          updateTabButtons();
+          applyFiltersAndRender();
+        });
+
+        // Busca em tempo real com debounce suave
+        let searchTimer = null;
+        dom.searchInput.addEventListener('input', (e) => {
+          state.searchQuery = e.target.value;
+          dom.clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
+          clearTimeout(searchTimer);
+          searchTimer = setTimeout(() => applyFiltersAndRender(), 120);
+        });
+
+        dom.clearSearchBtn.addEventListener('click', () => {
+          state.searchQuery = '';
+          dom.searchInput.value = '';
+          dom.clearSearchBtn.classList.add('hidden');
+          applyFiltersAndRender();
+          dom.searchInput.focus();
+        });
+
+        // Filtro por categoria (group-title)
+        dom.categoryChips.addEventListener('click', (e) => {
+          const btn = e.target.closest('button[data-category]');
+          if (!btn) return;
+          state.activeCategory = btn.dataset.category;
+          buildCategoryChips();
+          applyFiltersAndRender();
+        });
+
+        // Clique em canal ou botão de favorito na lista
+        dom.channelList.addEventListener('click', (e) => {
+          const favBtn = e.target.closest('button[data-fav-url]');
+          if (favBtn) {
+            e.stopPropagation();
+            const idx = Number(favBtn.dataset.favIdx);
+            const ch = state.filteredChannels[idx];
+            if (ch) toggleFavorite(ch);
+            return;
+          }
+
+          const card = e.target.closest('.channel-card');
+          if (!card) return;
+          const idx = Number(card.dataset.channelIndex);
+          const ch = state.filteredChannels[idx];
+          if (ch) playChannel(ch);
+        });
+
+        // Paginação / Scroll Infinito
+        dom.loadMoreBtn.addEventListener('click', () => renderNextBatch());
+        dom.channelListContainer.addEventListener('scroll', () => {
+          const el = dom.channelListContainer;
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight - 240) {
+            renderNextBatch();
+          }
+        });
+
+        dom.retryPlaylistBtn.addEventListener('click', () => {
+          if (state.currentPlaylist && state.currentPlaylist.url) {
+            loadPlaylist(state.currentPlaylist);
+          }
+        });
+
+        // Controles do Player
+        dom.ctrlPlayBtn.addEventListener('click', () => {
+          if (!state.currentChannel) return;
+          if (dom.video.paused) dom.video.play().catch(() => {});
+          else dom.video.pause();
+        });
+
+        dom.ctrlReloadBtn.addEventListener('click', () => {
+          if (state.currentChannel) playChannel(state.currentChannel);
+        });
+
+        dom.ctrlMuteBtn.addEventListener('click', () => {
+          dom.video.muted = !dom.video.muted;
+        });
+
+        dom.ctrlVolumeSlider.addEventListener('input', (e) => {
+          const val = parseFloat(e.target.value);
+          dom.video.volume = val;
+          dom.video.muted = val === 0;
+        });
+
+        const toggleStreamProxy = () => {
+          state.streamProxyEnabled = !state.streamProxyEnabled;
+          updateStreamProxySwitches();
+          showToast(
+            state.streamProxyEnabled
+              ? 'Proxy no Stream ativado (rotas HLS passarão pelo proxy)'
+              : 'Proxy no Stream no modo automático (direto com failover)',
+            'info'
+          );
+          if (state.currentChannel) {
+            playChannel(state.currentChannel);
+          }
+        };
+
+        dom.ctrlProxyToggleBtn.addEventListener('click', toggleStreamProxy);
+        dom.quickStreamProxySwitch.addEventListener('click', toggleStreamProxy);
+        dom.modalStreamProxySwitch.addEventListener('click', toggleStreamProxy);
+
+        dom.modalFailoverSwitch.addEventListener('click', () => {
+          state.autoFailoverEnabled = !state.autoFailoverEnabled;
+          dom.modalFailoverSwitch.classList.toggle('on', state.autoFailoverEnabled);
+          dom.modalFailoverSwitch.setAttribute('aria-checked', String(state.autoFailoverEnabled));
+        });
+
+        dom.ctrlFavBtn.addEventListener('click', () => {
+          if (state.currentChannel) toggleFavorite(state.currentChannel);
+        });
+
+        dom.ctrlCopyBtn.addEventListener('click', () => {
+          if (state.currentChannel) {
+            copyToClipboard(state.currentChannel.url, `Link de "${state.currentChannel.name}" copiado!`);
+          } else {
+            showToast('Selecione um canal primeiro.', 'info');
+          }
+        });
+
+        dom.ctrlPipBtn.addEventListener('click', async () => {
+          try {
+            if (document.pictureInPictureElement) {
+              await document.exitPictureInPicture();
+            } else if (document.pictureInPictureEnabled && dom.video.readyState >= 2) {
+              await dom.video.requestPictureInPicture();
+            } else {
+              showToast('Picture-in-Picture indisponível neste stream ou navegador.', 'warning');
+            }
+          } catch (err) {
+            showToast('Não foi possível ativar o modo Picture-in-Picture.', 'warning');
+          }
+        });
+
+        dom.ctrlFullscreenBtn.addEventListener('click', () => {
+          const target = dom.playerWrapper;
+          if (!document.fullscreenElement) {
+            if (target.requestFullscreen) target.requestFullscreen();
+            else if (dom.video.webkitEnterFullscreen) dom.video.webkitEnterFullscreen();
+          } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+          }
+        });
+
+        // Botões do Overlay de Erro do Player
+        dom.errorTryNextProxyBtn.addEventListener('click', () => {
+          if (!state.currentChannel) return;
+          const next = findNextUntriedProxy();
+          if (next !== undefined) {
+            playChannel(state.currentChannel, next);
+          } else {
+            // Reinicia ciclo de rotas a partir do próximo proxy disponível
+            state.streamAttemptedRoutes.clear();
+            const healthy = getHealthyProxiesSorted();
+            const pick = healthy.length ? healthy[0] : state.proxies[0];
+            playChannel(state.currentChannel, pick || null);
+          }
+        });
+
+        dom.errorReloadBtn.addEventListener('click', () => {
+          if (state.currentChannel) playChannel(state.currentChannel);
+        });
+
+        dom.errorCopyBtn.addEventListener('click', () => {
+          if (state.currentChannel) copyToClipboard(state.currentChannel.url);
+        });
+
+        // Seleção de Proxy na Barra de Telemetria e no Modal
+        const handleProxySelectionClick = (e) => {
+          const removeBtn = e.target.closest('button[data-remove-proxy]');
+          if (removeBtn) {
+            const idToRemove = removeBtn.dataset.removeProxy;
+            state.proxies = state.proxies.filter(p => p.id !== idToRemove);
+            if (state.activeProxyId === idToRemove) {
+              const healthy = getHealthyProxiesSorted();
+              state.activeProxyId = healthy.length ? healthy[0].id : null;
+            }
+            saveCustomProxies();
+            renderProxyViews();
+            showToast('Proxy customizado removido.', 'info');
+            return;
+          }
+
+          const btn = e.target.closest('button[data-proxy-select]');
+          if (!btn) return;
+          const val = btn.dataset.proxySelect;
+          selectProxy(val === '__DIRECT__' ? null : val);
+        };
+
+        dom.telemetryNodesBar.addEventListener('click', handleProxySelectionClick);
+        dom.modalProxyList.addEventListener('click', handleProxySelectionClick);
+
+        dom.telemetryRetestBtn.addEventListener('click', retestAllProxies);
+        dom.modalRetestAllBtn.addEventListener('click', retestAllProxies);
+
+        // Modal Central de Controle de Proxy
+        const openProxyModal = () => {
+          renderProxyModalList();
+          dom.proxyModal.classList.remove('hidden');
+        };
+        const closeProxyModal = () => dom.proxyModal.classList.add('hidden');
+
+        dom.openProxyModalBtn.addEventListener('click', openProxyModal);
+        dom.telemetryConfigBtn.addEventListener('click', openProxyModal);
+        dom.closeProxyModalBtn.addEventListener('click', closeProxyModal);
+        dom.proxyModal.addEventListener('click', (e) => {
+          if (e.target === dom.proxyModal) closeProxyModal();
+        });
+
+        // Adicionar Proxy Customizado
+        dom.addCustomProxyBtn.addEventListener('click', async () => {
+          const name = dom.customProxyName.value.trim() || 'Proxy Custom';
+          const prefix = dom.customProxyUrl.value.trim();
+          const encode = dom.customProxyEncode.checked;
+
+          if (!prefix || !/^https?:\/\//i.test(prefix)) {
+            showToast('Informe uma URL válida começando com https:// ou http://', 'warning');
+            return;
+          }
+
+          const newProxy = {
+            id: `custom_${Date.now()}`,
+            name,
+            prefix,
+            encode,
+            custom: true,
+            status: 'testing',
+            latency: null,
+          };
+
+          state.proxies.push(newProxy);
+          saveCustomProxies();
+          dom.customProxyName.value = '';
+          dom.customProxyUrl.value = '';
+          renderProxyViews();
+
+          const res = await testSingleProxy(newProxy);
+          if (res.ok) {
+            selectProxy(newProxy.id);
+            showToast(`Proxy "${newProxy.name}" online (${res.latency} ms) e ativado!`, 'success');
+          } else {
+            showToast(`Proxy "${newProxy.name}" adicionado, mas não respondeu ao teste agora.`, 'warning');
+          }
+        });
+
+        // Modal de Importação de Lista M3U8 / Arquivo Local
+        const closeImportModal = () => dom.importModal.classList.add('hidden');
+        dom.openImportModalBtn.addEventListener('click', () => dom.importModal.classList.remove('hidden'));
+        dom.closeImportModalBtn.addEventListener('click', closeImportModal);
+        dom.importModal.addEventListener('click', (e) => {
+          if (e.target === dom.importModal) closeImportModal();
+        });
+
+        dom.importUrlSubmitBtn.addEventListener('click', () => {
+          const url = dom.importUrlInput.value.trim();
+          if (!url || !/^https?:\/\//i.test(url)) {
+            showToast('Digite uma URL .m3u8 válida.', 'warning');
+            return;
+          }
+          closeImportModal();
+          state.activeTab = 'all';
+          updateTabButtons();
+          loadPlaylist({ id: `url_${Date.now()}`, name: 'Lista Customizada', url });
+          dom.importUrlInput.value = '';
+        });
+
+        dom.importFileInput.addEventListener('change', (e) => {
+          const file = e.target.files && e.target.files[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            closeImportModal();
+            state.activeTab = 'all';
+            updateTabButtons();
+            loadRawPlaylistContent(file.name.replace(/\.(m3u8|m3u)$/i, ''), String(reader.result || ''));
+            dom.importFileInput.value = '';
+          };
+          reader.onerror = () => showToast('Erro ao ler o arquivo local.', 'error');
+          reader.readAsText(file);
+        });
+
+        // Tecla ESC fecha modais
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            closeProxyModal();
+            closeImportModal();
+          }
+        });
+      }
+
+      /* ======================================================================
+         INICIALIZAÇÃO DO APP
+         ====================================================================== */
+      function bootstrap() {
+        initProxyPool();
+        renderPlaylistPills();
+        updateFavBadge();
+        updateStreamProxySwitches();
+        bindVideoEvents();
+        bindUiEvents();
+
+        // Inicia o handshake paralelo de proxies antes de liberar a interface
+        runBootProxyHandshake();
+      }
+
+      window.addEventListener('DOMContentLoaded', bootstrap);
+    })();
+  </script>
+</body>
+</html>
