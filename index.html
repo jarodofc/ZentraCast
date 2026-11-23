@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>zPLAYER • IPTV Hub + Web Video Caster</title>
-  <meta name="theme-color" content="#060913" />
-  <meta name="description" content="Catálogo IPTV unificado para navegador e Web Video Caster. Importação M3U, HLS e diagnóstico de rede sem backend próprio.">
+  <title>ZentraCast — IPTV &amp; Web Video Caster</title>
+  <meta name="theme-color" content="#0B111B" />
+  <meta name="description" content="ZentraCast: IPTV e transmissão para TV em uma experiência simples. Playlists M3U, player HLS e Web Video Caster, diretamente no navegador." />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
   
-  <meta name="description" content="zPLAYER: player IPTV no navegador, HLS adaptativo, playlists M3U e diagnóstico DNS-over-HTTPS." />
+  <meta name="application-name" content="ZentraCast" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="manifest" href="/manifest.webmanifest" />
   <meta name="color-scheme" content="dark light" />
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
   <!-- HLS.js 1.7.4: carregado sob demanda com fallback de CDN. -->
@@ -21,7 +23,7 @@
 
   
 </head>
-<body class="antialiased selection:bg-indigo-500/35 selection:text-white">
+<body class="antialiased selection:bg-blue-300/25 selection:text-white">
 
   <div class="ambient-mesh" aria-hidden="true"></div>
 
@@ -30,24 +32,18 @@
        ======================================================================== -->
   <div id="boot-gate" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-2xl transition-all duration-700 ease-spring">
     <div class="liquid-glass-elevated w-full max-w-xl rounded-[28px] p-6 sm:p-7 relative overflow-hidden">
-      <div class="absolute -top-20 -right-20 w-52 h-52 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none"></div>
-      <div class="absolute -bottom-24 -left-20 w-52 h-52 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none"></div>
+      
+      
 
       <div class="relative z-10">
         <div class="flex items-center gap-3.5 mb-5">
-          <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 via-cyan-500 to-emerald-400 p-[1.5px] shadow-lg shadow-indigo-500/30 flex-shrink-0">
-            <div class="w-full h-full rounded-[14.5px] bg-slate-950/90 flex items-center justify-center">
-              <svg class="w-7 h-7 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="9.5" />
-                <path d="M2.5 12h19" />
-                <path d="M12 2.5a14 14 0 0 1 3.8 9.5 14 14 0 0 1-3.8 9.5 14 14 0 0 1-3.8-9.5A14 14 0 0 1 12 2.5z" />
-              </svg>
-            </div>
+          <div class="brand-mark brand-mark--large" aria-hidden="true">
+            <img src="/brand/mark.svg" width="38" height="38" alt="" decoding="async" />
           </div>
           <div class="min-w-0">
             <div class="flex flex-wrap items-center gap-2">
-              <h1 class="text-lg sm:text-xl font-extrabold tracking-tight">IPTV Brasil 2026</h1>
-              <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-400/30">DoH DNS Edition</span>
+              <h1 class="brand-wordmark brand-wordmark--large">Zentra<span>Cast</span></h1>
+              <span class="brand-edition">IPTV · CAST</span>
             </div>
             <p id="boot-subtitle" class="text-xs sm:text-sm text-sec mt-0.5">Preparando player e serviços públicos de DNS...</p>
           </div>
@@ -92,21 +88,15 @@
     <header class="sticky top-0 z-30 liquid-glass border-x-0 border-t-0">
       <div class="max-w-[1640px] mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2.5">
         <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-          <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-cyan-500 to-emerald-400 p-[1.5px] shadow-md shadow-indigo-500/20 flex-shrink-0">
-            <div class="w-full h-full rounded-[14.5px] bg-slate-950/90 flex items-center justify-center">
-              <svg class="w-5 h-5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2.5" y="6.5" width="19" height="13.5" rx="3" />
-                <path d="M16.5 2.5L12 6.5 7.5 2.5" />
-                <polygon points="10 10.5 15.5 13.25 10 16 10 10.5" fill="currentColor" stroke="none" />
-              </svg>
-            </div>
+          <div class="brand-mark brand-mark--small" aria-hidden="true">
+            <img src="/brand/mark.svg" width="27" height="27" alt="" decoding="async" />
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-1.5">
-              <h1 class="text-sm sm:text-base font-extrabold tracking-tight truncate">IPTV Brasil 2026</h1>
-              <span class="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-500 dark:text-emerald-300 border border-emerald-500/25">DoH DNS</span>
+              <h1 class="brand-wordmark truncate">Zentra<span>Cast</span></h1>
+              <span class="brand-header-dot" aria-hidden="true"></span>
             </div>
-            <p class="text-[11px] text-sec truncate hidden md:block">Diagnóstico DoH • Catálogo unificado • Web Video Caster</p>
+            <p class="text-[11px] text-sec truncate hidden md:block">IPTV simplificado · Web Video Caster</p>
           </div>
         </div>
 
@@ -187,15 +177,15 @@
             </div>
 
             <!-- Idle -->
-            <div id="player-idle-overlay" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80">
-              <div class="w-16 h-16 rounded-3xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center mb-4 shadow-xl shadow-indigo-500/20">
+            <div id="player-idle-overlay" class="player-empty-state absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+              <div class="player-empty-icon w-16 h-16 rounded-3xl bg-white/10 border border-white/15 flex items-center justify-center mb-4">
                 <svg class="w-8 h-8 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                   <polygon points="7 5 20 12 7 19 7 5" fill="currentColor" fill-opacity="0.22" />
                 </svg>
               </div>
-              <h3 class="text-base sm:text-lg font-bold text-white">Player HLS + Diagnóstico DoH</h3>
+              <h3 class="text-base sm:text-lg font-bold text-white">Tudo pronto para assistir</h3>
               <p class="text-xs sm:text-sm text-slate-300 max-w-md mt-1">
-                Escolha um canal na lista ao lado. O player conecta diretamente à origem. O diagnóstico DoH é independente e não altera o DNS nem o CORS do navegador.
+                Escolha um canal para assistir ou enviar ao Web Video Caster. O diagnóstico de rede continua disponível quando necessário.
               </p>
             </div>
 
@@ -569,7 +559,7 @@
   <!-- 5. TOASTS -->
   <div id="toast-container" class="fixed bottom-20 sm:bottom-5 right-4 z-[60] flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
-  <!-- 6. GITHUB DYNAMIC ISLAND -->
+  <!-- GitHub: link discreto para o mantenedor -->
   <nav class="gh-island-dock" aria-label="Perfil GitHub de Jarod">
     <a id="gh-dynamic-island" href="https://github.com/jarodofc" target="_blank" rel="noopener noreferrer" class="gh-island" title="Abrir GitHub: https://github.com/jarodofc">
       <span class="gh-island-core">
