@@ -434,3 +434,14 @@ html.light.solid-mode .gh-island {
 @media (prefers-reduced-transparency: reduce) {
   .liquid-glass, .liquid-glass-elevated { background: var(--glass-solid) !important; }
 }
+
+/* Vector casting controls share the same accessible action colors. */
+.cast-action {
+  background: var(--action-bg);
+  color: var(--action-fg);
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+.cast-action:hover { filter: brightness(1.06); }
+.channel-card button[data-wvc-index] { min-width: 40px; min-height: 40px; color: var(--text-secondary); }
+.channel-card button[data-wvc-index]:hover { color: var(--accent); background: var(--card-bg-hover); }
