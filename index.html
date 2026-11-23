@@ -5,16 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>IPTV Brasil 2026 • DoH DNS Edition</title>
 
-  <!-- Tipografia Inter + JetBrains Mono + Stack nativa SF Pro -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- HLS.js via CDN (jsDelivr) para reprodução de streams .m3u8 -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <!-- Versão fixa do HLS.js (evita quebras com @latest) -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
 
   <script>
     tailwind.config = {
@@ -25,9 +22,7 @@
             sans: ['-apple-system', 'BlinkMacSystemFont', '"SF Pro Display"', '"SF Pro Text"', '"Inter"', 'system-ui', 'sans-serif'],
             mono: ['"SF Mono"', '"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
           },
-          transitionTimingFunction: {
-            spring: 'cubic-bezier(0.22, 1, 0.36, 1)',
-          }
+          transitionTimingFunction: { spring: 'cubic-bezier(0.22, 1, 0.36, 1)' }
         }
       }
     };
@@ -35,16 +30,13 @@
 
   <style>
     /* ==========================================================================
-       SISTEMA DE DESIGN: MATERIAL DESIGN 3 (MATERIAL X) + iOS LIQUID GLASS
-       Suporte completo: Modo Escuro (padrão), Modo Claro e Modo Sólido
+       TOKENS (Escuro padrão / Claro / Sólido)
        ========================================================================== */
     :root {
-      /* Tokens Modo Escuro (Padrão) */
       --bg-base: #060913;
       --text-primary: #F8FAFC;
       --text-secondary: #94A3B8;
       --text-tertiary: #64748B;
-
       --glass-bg: rgba(15, 22, 40, 0.62);
       --glass-bg-elevated: rgba(20, 29, 52, 0.78);
       --glass-solid: #0E1526;
@@ -52,12 +44,21 @@
       --glass-border: rgba(255, 255, 255, 0.12);
       --glass-specular: rgba(255, 255, 255, 0.24);
       --glass-shadow: 0 20px 50px -14px rgba(0, 0, 0, 0.62);
-
-      /* Tokens Liquid Glass (iOS) */
       --glass-tint: var(--glass-bg);
       --glass-blur: 22px;
       --glass-edge: var(--glass-border);
-/* ... existing code ... -->
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-bg-hover: rgba(255, 255, 255, 0.09);
+      --input-bg: rgba(255, 255, 255, 0.06);
+      --accent: #6366F1;
+      --accent-2: #06B6D4;
+    }
+
+    html.light {
+      --bg-base: #EEF2FA;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-tertiary: #64748B;
       --glass-bg: rgba(255, 255, 255, 0.68);
       --glass-bg-elevated: rgba(255, 255, 255, 0.84);
       --glass-solid: #FFFFFF;
@@ -65,281 +66,236 @@
       --glass-border: rgba(15, 23, 42, 0.10);
       --glass-specular: rgba(255, 255, 255, 0.92);
       --glass-shadow: 0 18px 42px -14px rgba(15, 23, 42, 0.14);
+      --card-bg: rgba(15, 23, 42, 0.04);
+      --card-bg-hover: rgba(15, 23, 42, 0.08);
+      --input-bg: rgba(15, 23, 42, 0.05);
+    }
 
-      /* Tokens Liquid Glass (Modo Claro) */
-      --glass-tint: var(--glass-bg);
-      --glass-blur: 22px;
-      --glass-edge: var(--glass-border);
-/* ... existing code ... -->
-    /* Superfícies iOS Liquid Glass */
+    html.solid-mode {
+      --glass-tint: var(--glass-solid);
+    }
+
+    html, body { background: var(--bg-base); color: var(--text-primary); }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif; min-height: 100vh; }
+
+    .text-sec { color: var(--text-secondary); }
+    .text-ter { color: var(--text-tertiary); }
+    .themed-divider { border-color: var(--glass-border); }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
+
+    /* Fundo ambiente */
+    .ambient-mesh {
+      position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background:
+        radial-gradient(60% 50% at 12% 8%, rgba(99, 102, 241, 0.28), transparent 70%),
+        radial-gradient(50% 45% at 88% 12%, rgba(6, 182, 212, 0.20), transparent 70%),
+        radial-gradient(55% 50% at 50% 100%, rgba(16, 185, 129, 0.14), transparent 70%),
+        var(--bg-base);
+    }
+    html.light .ambient-mesh {
+      background:
+        radial-gradient(60% 50% at 12% 8%, rgba(99, 102, 241, 0.18), transparent 70%),
+        radial-gradient(50% 45% at 88% 12%, rgba(6, 182, 212, 0.14), transparent 70%),
+        radial-gradient(55% 50% at 50% 100%, rgba(16, 185, 129, 0.10), transparent 70%),
+        var(--bg-base);
+    }
+
+    /* Superfícies Liquid Glass */
     .liquid-glass {
       background: var(--glass-tint);
       backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.8);
       border: 1px solid var(--glass-edge);
-      box-shadow:
-        inset 0 1px 0 0 var(--glass-specular),
-        var(--glass-shadow);
+      box-shadow: inset 0 1px 0 0 var(--glass-specular), var(--glass-shadow);
     }
-/* ... existing code ... -->
+    .liquid-glass-elevated {
+      background: var(--glass-bg-elevated);
+      backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(1.9);
+      -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px)) saturate(1.9);
+      border: 1px solid var(--glass-edge);
+      box-shadow: inset 0 1px 0 0 var(--glass-specular), var(--glass-shadow);
+    }
+    html.solid-mode .liquid-glass,
+    html.solid-mode .liquid-glass-elevated {
+      backdrop-filter: none; -webkit-backdrop-filter: none;
+    }
+    html.solid-mode .liquid-glass-elevated { background: var(--glass-solid-elevated); }
+    @media (prefers-reduced-transparency: reduce) {
+      .liquid-glass, .liquid-glass-elevated { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--glass-solid); }
+    }
+
+    /* Botões e pílulas Material 3 */
+    .m3-btn { transition: transform .2s cubic-bezier(0.22,1,0.36,1), background-color .2s, opacity .2s, box-shadow .2s; cursor: pointer; }
+    .m3-btn:hover { transform: translateY(-1px); }
+    .m3-btn:active { transform: scale(0.96); }
+    .m3-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+    .m3-pill {
+      background: var(--card-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: background-color .2s, border-color .2s, color .2s, transform .2s;
+    }
+    .m3-pill:hover { background: var(--card-bg-hover); }
+    .m3-pill:active { transform: scale(0.96); }
+    .m3-pill.active {
+      background: linear-gradient(135deg, rgba(99,102,241,.9), rgba(6,182,212,.85));
+      color: #fff; border-color: rgba(255,255,255,.25);
+    }
+
+    .channel-card {
+      background: var(--card-bg);
+      border: 1px solid var(--glass-border);
+      transition: background-color .2s, border-color .2s, transform .2s;
+    }
+    .channel-card:hover { background: var(--card-bg-hover); }
+    .channel-card.playing {
+      border-color: rgba(34, 211, 238, 0.6);
+      background: rgba(6, 182, 212, 0.12);
+    }
+
+    .themed-input {
+      background: var(--input-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-primary);
+      outline: none;
+    }
+    .themed-input::placeholder { color: var(--text-tertiary); }
+    .themed-input:focus { border-color: rgba(99,102,241,.7); box-shadow: 0 0 0 3px rgba(99,102,241,.2); }
+    select.themed-input option { background: var(--glass-solid); color: var(--text-primary); }
+
+    /* Switch estilo iOS */
+    .ios-switch {
+      position: relative; width: 42px; height: 24px; border-radius: 9999px;
+      background: rgba(100, 116, 139, 0.45); border: 0; cursor: pointer; flex-shrink: 0;
+      transition: background-color .25s ease;
+    }
+    .ios-switch::after {
+      content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 9999px;
+      background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.35);
+      transition: transform .3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .ios-switch.on { background: #22C55E; }
+    .ios-switch.on::after { transform: translateX(18px); }
+
+    /* Slider de volume */
+    .ios-slider { -webkit-appearance: none; appearance: none; height: 4px; border-radius: 9999px; background: rgba(255,255,255,.28); outline: none; }
+    .ios-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 9999px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.5); cursor: pointer; }
+    .ios-slider::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 9999px; background: #fff; cursor: pointer; }
+
+    .no-scrollbar { scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    #channel-list-container { scrollbar-width: thin; scrollbar-color: rgba(100,116,139,.5) transparent; }
+
+    /* Animações */
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+    .animate-spin-slow { animation: spin-slow 1s linear infinite; }
+    @keyframes fade-up { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: none; } }
+    .animate-fade-up { animation: fade-up .35s cubic-bezier(0.22,1,0.36,1) both; }
+    @keyframes pulse-live { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+    .live-dot { animation: pulse-live 1.4s ease-in-out infinite; }
+
+    /* Controles do player */
     .player-controls-bar {
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
-      pointer-events: none;
+      opacity: 0; transform: translateY(8px); pointer-events: none;
+      transition: opacity .25s ease, transform .25s cubic-bezier(0.22,1,0.36,1);
     }
+    .player-wrapper.controls-visible .player-controls-bar,
+    .player-wrapper:hover .player-controls-bar,
+    .player-wrapper:focus-within .player-controls-bar {
+      opacity: 1; transform: none; pointer-events: auto;
+    }
+    .player-wrapper:fullscreen { border-radius: 0; }
 
     /* ==========================================================================
-       GITHUB DYNAMIC ISLAND (iOS SPRING + LIQUID GLASS)
+       GITHUB DYNAMIC ISLAND
        ========================================================================== */
     .gh-island-dock {
-      position: fixed;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 90;
-      pointer-events: none;
-      max-width: calc(100vw - 24px);
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+      z-index: 90; pointer-events: none; max-width: calc(100vw - 24px);
     }
-
     .gh-island {
-      pointer-events: auto;
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      height: 44px;
-      padding: 6px 14px 6px 10px;
-      border-radius: 9999px;
-      text-decoration: none;
-      color: #F8FAFC;
-      background: rgba(5, 7, 11, 0.88);
+      pointer-events: auto; position: relative; display: inline-flex; align-items: center;
+      height: 44px; padding: 6px 14px 6px 10px; border-radius: 9999px; text-decoration: none;
+      color: #F8FAFC; background: rgba(5, 7, 11, 0.88);
       backdrop-filter: blur(var(--glass-blur)) saturate(1.9);
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.9);
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      box-shadow:
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.26),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.04),
-        0 18px 44px -8px rgba(0, 0, 0, 0.72),
-        0 4px 16px -2px rgba(6, 182, 212, 0.16);
-      overflow: hidden;
-      cursor: pointer;
-      outline: none;
-      transition:
-        transform 0.48s cubic-bezier(0.34, 1.56, 0.64, 1),
-        padding 0.48s cubic-bezier(0.34, 1.56, 0.64, 1),
-        border-color 0.28s ease,
-        box-shadow 0.36s ease,
-        background-color 0.28s ease;
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: inset 0 1px 0 0 rgba(255,255,255,.26), inset 0 0 0 1px rgba(255,255,255,.04),
+        0 18px 44px -8px rgba(0,0,0,.72), 0 4px 16px -2px rgba(6,182,212,.16);
+      overflow: hidden; cursor: pointer; outline: none;
+      transition: transform .48s cubic-bezier(0.34,1.56,0.64,1), padding .48s cubic-bezier(0.34,1.56,0.64,1),
+        border-color .28s ease, box-shadow .36s ease, background-color .28s ease;
     }
-
-    /* Brilho refrativo ambiental no hover */
     .gh-island::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: inherit;
-      background: radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.26), transparent 68%);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.32s ease;
+      content: ''; position: absolute; inset: 0; border-radius: inherit;
+      background: radial-gradient(circle at 50% 0%, rgba(56,189,248,.26), transparent 68%);
+      opacity: 0; pointer-events: none; transition: opacity .32s ease;
     }
-
-    .gh-island:hover::before,
-    .gh-island:focus-visible::before,
-    .gh-island.is-expanded::before {
-      opacity: 1;
+    .gh-island:hover::before, .gh-island:focus-visible::before, .gh-island.is-expanded::before { opacity: 1; }
+    .gh-island:hover, .gh-island:focus-visible, .gh-island.is-expanded {
+      transform: translateY(-2px) scale(1.018); padding: 6px 10px 6px 12px;
+      border-color: rgba(56,189,248,.42);
+      box-shadow: inset 0 1px 0 0 rgba(255,255,255,.36), 0 22px 50px -10px rgba(0,0,0,.78), 0 0 28px -4px rgba(56,189,248,.30);
     }
-
-    .gh-island:hover,
-    .gh-island:focus-visible,
-    .gh-island.is-expanded {
-      transform: translateY(-2px) scale(1.018);
-      padding: 6px 10px 6px 12px;
-      border-color: rgba(56, 189, 248, 0.42);
-      box-shadow:
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.36),
-        0 22px 50px -10px rgba(0, 0, 0, 0.78),
-        0 0 28px -4px rgba(56, 189, 248, 0.30);
-    }
-
-    .gh-island:active {
-      transform: translateY(0) scale(0.97);
-    }
-
-    /* Núcleo Compacto */
-    .gh-island-core {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      flex-shrink: 0;
-      position: relative;
-      z-index: 1;
-    }
-
+    .gh-island:active { transform: translateY(0) scale(.97); }
+    .gh-island-core { display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0; position: relative; z-index: 1; }
     .gh-island-icon-wrap {
-      width: 28px;
-      height: 28px;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.09);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      transition:
-        transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
-        background-color 0.25s ease,
-        border-color 0.25s ease;
+      width: 28px; height: 28px; border-radius: 9999px; background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.14); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: transform .45s cubic-bezier(0.34,1.56,0.64,1), background-color .25s ease, border-color .25s ease;
     }
-
-    .gh-island:hover .gh-island-icon-wrap,
-    .gh-island:focus-visible .gh-island-icon-wrap,
-    .gh-island.is-expanded .gh-island-icon-wrap {
-      transform: scale(1.12) rotate(-5deg);
-      background: rgba(56, 189, 248, 0.18);
-      border-color: rgba(56, 189, 248, 0.45);
+    .gh-island:hover .gh-island-icon-wrap, .gh-island:focus-visible .gh-island-icon-wrap, .gh-island.is-expanded .gh-island-icon-wrap {
+      transform: scale(1.12) rotate(-5deg); background: rgba(56,189,248,.18); border-color: rgba(56,189,248,.45);
     }
-
     .gh-island-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 9999px;
-      background: #22C55E;
-      box-shadow: 0 0 10px rgba(34, 197, 94, 0.95);
-      flex-shrink: 0;
-      animation: pulse-live 1.7s ease-in-out infinite;
+      width: 7px; height: 7px; border-radius: 9999px; background: #22C55E;
+      box-shadow: 0 0 10px rgba(34,197,94,.95); flex-shrink: 0; animation: pulse-live 1.7s ease-in-out infinite;
     }
-
-    .gh-island-handle {
-      font-size: 12.5px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      color: #F8FAFC;
-      white-space: nowrap;
-    }
-
-    /* Conteúdo Expandido com Física Spring */
+    .gh-island-handle { font-size: 12.5px; font-weight: 700; letter-spacing: -.01em; color: #F8FAFC; white-space: nowrap; }
     .gh-island-expand {
-      position: relative;
-      z-index: 1;
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      max-width: 0;
-      opacity: 0;
-      margin-left: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      transition:
-        max-width 0.54s cubic-bezier(0.34, 1.56, 0.64, 1),
-        opacity 0.26s ease,
-        margin-left 0.44s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 10px;
+      max-width: 0; opacity: 0; margin-left: 0; overflow: hidden; white-space: nowrap;
+      transition: max-width .54s cubic-bezier(0.34,1.56,0.64,1), opacity .26s ease, margin-left .44s cubic-bezier(0.34,1.56,0.64,1);
     }
-
-    .gh-island:hover .gh-island-expand,
-    .gh-island:focus-visible .gh-island-expand,
-    .gh-island.is-expanded .gh-island-expand {
-      max-width: 320px;
-      opacity: 1;
-      margin-left: 10px;
+    .gh-island:hover .gh-island-expand, .gh-island:focus-visible .gh-island-expand, .gh-island.is-expanded .gh-island-expand {
+      max-width: 320px; opacity: 1; margin-left: 10px;
     }
-
-    .gh-island-sep {
-      width: 1px;
-      height: 18px;
-      background: rgba(255, 255, 255, 0.18);
-      flex-shrink: 0;
-    }
-
-    .gh-island-url {
-      font-family: "SF Mono", "JetBrains Mono", ui-monospace, monospace;
-      font-size: 11px;
-      color: #94A3B8;
-      letter-spacing: -0.01em;
-    }
-
+    .gh-island-sep { width: 1px; height: 18px; background: rgba(255,255,255,.18); flex-shrink: 0; }
+    .gh-island-url { font-family: "SF Mono","JetBrains Mono",ui-monospace,monospace; font-size: 11px; color: #94A3B8; letter-spacing: -.01em; }
     .gh-island-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 5px 11px;
-      border-radius: 9999px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #FFFFFF;
-      background: linear-gradient(135deg, #6366F1, #06B6D4);
-      border: 1px solid rgba(255, 255, 255, 0.26);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.32), 0 6px 16px -4px rgba(6, 182, 212, 0.55);
-      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 9999px;
+      font-size: 11px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #6366F1, #06B6D4);
+      border: 1px solid rgba(255,255,255,.26);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.32), 0 6px 16px -4px rgba(6,182,212,.55); flex-shrink: 0;
     }
-
-    /* Adaptação de Alto Contraste para Modo Claro */
-    html.light .gh-island {
-      background: rgba(10, 14, 24, 0.90);
-      border-color: rgba(15, 23, 42, 0.22);
-      box-shadow:
-        inset 0 1px 0 0 rgba(255, 255, 255, 0.24),
-        0 18px 38px -10px rgba(15, 23, 42, 0.34),
-        0 4px 12px -2px rgba(99, 102, 241, 0.18);
-    }
-
-    /* Adaptação para Modo Sólido e Preferência de Redução de Transparência */
-    html.solid-mode .gh-island {
-      backdrop-filter: none !important;
-      -webkit-backdrop-filter: none !important;
-      background: #05070B !important;
-      border-color: rgba(255, 255, 255, 0.22);
-    }
-    html.light.solid-mode .gh-island {
-      background: #0F172A !important;
-      border-color: #334155;
-    }
-
+    html.light .gh-island { background: rgba(10,14,24,.90); border-color: rgba(15,23,42,.22); }
+    html.solid-mode .gh-island { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: #05070B !important; border-color: rgba(255,255,255,.22); }
+    html.light.solid-mode .gh-island { background: #0F172A !important; border-color: #334155; }
     @media (prefers-reduced-transparency: reduce) {
-      .gh-island {
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        background: #05070B;
-      }
-      html.light .gh-island {
-        background: #0F172A;
-      }
+      .gh-island { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: #05070B; }
     }
-
     @media (max-width: 480px) {
-      .gh-island-url {
-        display: none;
-      }
-      .gh-island:hover .gh-island-expand,
-      .gh-island:focus-visible .gh-island-expand,
-      .gh-island.is-expanded .gh-island-expand {
-        max-width: 175px;
-      }
+      .gh-island-url { display: none; }
+      .gh-island:hover .gh-island-expand, .gh-island:focus-visible .gh-island-expand, .gh-island.is-expanded .gh-island-expand { max-width: 175px; }
     }
-
-    @media print {
-      .gh-island-dock {
-        display: none !important;
-      }
-    }
+    @media print { .gh-island-dock { display: none !important; } }
   </style>
 </head>
 <body class="antialiased selection:bg-indigo-500/35 selection:text-white">
 
-  <!-- Fundo Mesh Adaptável -->
   <div class="ambient-mesh" aria-hidden="true"></div>
 
   <!-- ========================================================================
-       1. TELA DE BOOT COM HANDSHAKE DNS-OVER-HTTPS (SPLASH GATE)
+       1. TELA DE BOOT (HANDSHAKE DoH)
        ======================================================================== -->
   <div id="boot-gate" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-2xl transition-all duration-700 ease-spring">
     <div class="liquid-glass-elevated w-full max-w-xl rounded-[28px] p-6 sm:p-7 relative overflow-hidden">
-      <!-- Glow Decorativo -->
       <div class="absolute -top-20 -right-20 w-52 h-52 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none"></div>
       <div class="absolute -bottom-24 -left-20 w-52 h-52 rounded-full bg-emerald-400/15 blur-3xl pointer-events-none"></div>
 
       <div class="relative z-10">
-        <!-- Cabeçalho -->
         <div class="flex items-center gap-3.5 mb-5">
           <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 via-cyan-500 to-emerald-400 p-[1.5px] shadow-lg shadow-indigo-500/30 flex-shrink-0">
             <div class="w-full h-full rounded-[14.5px] bg-slate-950/90 flex items-center justify-center">
@@ -359,7 +315,6 @@
           </div>
         </div>
 
-        <!-- Barra de Progresso -->
         <div class="mb-4">
           <div class="flex items-center justify-between text-xs font-medium mb-2 gap-2">
             <span id="boot-status-text" class="text-cyan-400 flex items-center gap-2 truncate">
@@ -375,10 +330,8 @@
           </div>
         </div>
 
-        <!-- Lista de Provedores DoH em Tempo Real -->
         <div id="boot-doh-list" class="space-y-2 mb-5"></div>
 
-        <!-- Rodapé com botão "Entrar agora" -->
         <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t themed-divider">
           <div class="flex items-center gap-2 text-[11px] text-sec">
             <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -387,9 +340,7 @@
             </svg>
             <span>Origem direta: <span class="font-mono">Ramys/Iptv-Brasil-2026</span> + jsDelivr</span>
           </div>
-          <button id="boot-enter-now-btn" type="button" class="m3-btn m3-pill px-4 py-1.5 rounded-full text-xs font-semibold">
-            Entrar agora
-          </button>
+          <button id="boot-enter-now-btn" type="button" class="m3-btn m3-pill px-4 py-1.5 rounded-full text-xs font-semibold">Entrar agora</button>
         </div>
       </div>
     </div>
@@ -400,10 +351,8 @@
        ======================================================================== -->
   <div id="app-shell" class="opacity-0 pointer-events-none transition-opacity duration-500 min-h-screen flex flex-col">
 
-    <!-- Top App Bar Liquid Glass -->
     <header class="sticky top-0 z-30 liquid-glass border-x-0 border-t-0">
       <div class="max-w-[1640px] mx-auto px-3 sm:px-6 py-2.5 flex items-center justify-between gap-2.5">
-        <!-- Marca -->
         <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
           <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-cyan-500 to-emerald-400 p-[1.5px] shadow-md shadow-indigo-500/20 flex-shrink-0">
             <div class="w-full h-full rounded-[14.5px] bg-slate-950/90 flex items-center justify-center">
@@ -423,16 +372,13 @@
           </div>
         </div>
 
-        <!-- Ações da Direita -->
         <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-          <!-- Badge do Resolver DoH Ativo -->
           <button id="open-dns-modal-btn" type="button" class="m3-pill rounded-full px-3 py-2 flex items-center gap-2 text-xs font-semibold" title="Abrir Central de Controle DNS">
-            <span id="header-dns-dot" class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]"></span>
-            <span id="header-dns-name" class="max-w-[92px] sm:max-w-[165px] truncate">Cloudflare</span>
+            <span id="header-dns-dot" class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            <span id="header-dns-name" class="max-w-[92px] sm:max-w-[165px] truncate">Cloudflare DNS</span>
             <span id="header-dns-latency" class="hidden sm:inline-block font-mono px-1.5 py-0.5 rounded-full bg-indigo-500/15 text-[10px] text-indigo-400 dark:text-cyan-300 tabular-nums">-- ms</span>
           </button>
 
-          <!-- Botão Modo Sólido (Acessibilidade) -->
           <button id="toggle-solid-btn" type="button" class="m3-pill rounded-full px-2.5 sm:px-3 py-2 flex items-center gap-1.5 text-xs font-semibold" title="Alternar Modo Sólido (desativa transparências)">
             <svg class="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="3" width="18" height="18" rx="4" />
@@ -442,25 +388,19 @@
             <span class="hidden xl:inline" id="solid-btn-label">Vidro</span>
           </button>
 
-          <!-- Botão Modo Escuro / Claro -->
           <button id="toggle-theme-btn" type="button" class="m3-pill rounded-full w-9 h-9 flex items-center justify-center" title="Alternar Tema Escuro / Claro" aria-label="Alternar tema">
             <svg id="icon-sun" class="w-4 h-4 text-amber-400 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="4.5" />
-              <line x1="12" y1="2" x2="12" y2="4.5" />
-              <line x1="12" y1="19.5" x2="12" y2="22" />
-              <line x1="4.93" y1="4.93" x2="6.7" y2="6.7" />
-              <line x1="17.3" y1="17.3" x2="19.07" y2="19.07" />
-              <line x1="2" y1="12" x2="4.5" y2="12" />
-              <line x1="19.5" y1="12" x2="22" y2="12" />
-              <line x1="4.93" y1="19.07" x2="6.7" y2="17.3" />
-              <line x1="17.3" y1="6.7" x2="19.07" y2="4.93" />
+              <line x1="12" y1="2" x2="12" y2="4.5" /><line x1="12" y1="19.5" x2="12" y2="22" />
+              <line x1="4.93" y1="4.93" x2="6.7" y2="6.7" /><line x1="17.3" y1="17.3" x2="19.07" y2="19.07" />
+              <line x1="2" y1="12" x2="4.5" y2="12" /><line x1="19.5" y1="12" x2="22" y2="12" />
+              <line x1="4.93" y1="19.07" x2="6.7" y2="17.3" /><line x1="17.3" y1="6.7" x2="19.07" y2="4.93" />
             </svg>
             <svg id="icon-moon" class="w-4 h-4 text-indigo-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
             </svg>
           </button>
 
-          <!-- Botão Importar Lista M3U8 -->
           <button id="open-import-modal-btn" type="button" class="m3-pill rounded-full px-3 py-2 flex items-center gap-1.5 text-xs font-semibold" title="Importar URL ou arquivo M3U/M3U8">
             <svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -472,27 +412,21 @@
         </div>
       </div>
 
-      <!-- Seletor Rápido das 7 Listas Oficiais -->
       <div class="max-w-[1640px] mx-auto px-3 sm:px-6 pb-2.5">
         <div id="playlist-pills" class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5"></div>
       </div>
     </header>
 
-    <!-- Grade Principal Responsiva -->
     <main class="flex-1 max-w-[1640px] w-full mx-auto px-3 sm:px-6 pt-4 sm:pt-5 pb-24 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-      <!-- ====================================================================
-           COLUNA ESQUERDA: PLAYER HLS.JS + BARRA DE TELEMETRIA DNS AO VIVO
-           ==================================================================== -->
+      <!-- COLUNA ESQUERDA: PLAYER + TELEMETRIA -->
       <section class="lg:col-span-7 xl:col-span-8 flex flex-col gap-4 lg:sticky lg:top-[122px]">
 
-        <!-- Container Glass do Player -->
         <div class="liquid-glass rounded-[28px] p-2.5 sm:p-3.5">
-          <!-- Área do Vídeo 16:9 -->
           <div id="player-wrapper" class="player-wrapper controls-visible relative w-full aspect-video rounded-[20px] overflow-hidden bg-black shadow-2xl border border-white/10">
             <video id="video-player" class="w-full h-full object-contain bg-black" playsinline webkit-playsinline></video>
 
-            <!-- Faixa Superior do Player (sempre legível sobre vídeo) -->
+            <!-- Faixa superior -->
             <div class="absolute top-0 inset-x-0 p-3 sm:p-4 bg-gradient-to-b from-black/85 via-black/40 to-transparent flex items-start justify-between gap-3 pointer-events-none z-10">
               <div class="flex items-center gap-3 min-w-0">
                 <div id="player-channel-logo-box" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -506,19 +440,15 @@
                   <p id="player-channel-group" class="text-[11px] text-slate-300 truncate">Pronto para reprodução direta via HLS.js + DoH</p>
                 </div>
               </div>
-
               <div class="flex flex-wrap items-center justify-end gap-1.5 flex-shrink-0">
                 <span id="stream-status-badge" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 backdrop-blur-md border border-white/15 text-slate-200">
-                  <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                  AGUARDANDO
+                  <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>AGUARDANDO
                 </span>
-                <span id="stream-dns-pill" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-emerald-200">
-                  DNS Ready
-                </span>
+                <span id="stream-dns-pill" class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono bg-emerald-500/20 backdrop-blur-md border border-emerald-400/30 text-emerald-200">DNS Ready</span>
               </div>
             </div>
 
-            <!-- Estado Inicial (Idle) -->
+            <!-- Idle -->
             <div id="player-idle-overlay" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/80">
               <div class="w-16 h-16 rounded-3xl bg-white/10 border border-white/15 backdrop-blur-md flex items-center justify-center mb-4 shadow-xl shadow-indigo-500/20">
                 <svg class="w-8 h-8 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -531,7 +461,7 @@
               </p>
             </div>
 
-            <!-- Overlay de Buffer / Pre-flight -->
+            <!-- Loading -->
             <div id="player-loading-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/65 backdrop-blur-sm z-20">
               <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center mb-3">
                 <svg class="w-6 h-6 text-cyan-300 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
@@ -541,13 +471,11 @@
               <p id="player-loading-text" class="text-xs sm:text-sm font-semibold text-white">Validando DNS e carregando stream...</p>
             </div>
 
-            <!-- Overlay de Diagnóstico Inteligente de Erro -->
+            <!-- Erro -->
             <div id="player-error-overlay" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center p-4 sm:p-6 bg-slate-950/92 backdrop-blur-md z-30 overflow-y-auto">
-              <div id="error-icon-wrap" class="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-400/35 flex items-center justify-center mb-3 flex-shrink-0">
+              <div class="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-400/35 flex items-center justify-center mb-3 flex-shrink-0">
                 <svg class="w-6 h-6 text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                  <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
               </div>
               <span id="error-category-tag" class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/20 text-rose-300 border border-rose-400/30 mb-1.5">Diagnóstico</span>
@@ -556,102 +484,71 @@
               <div class="flex flex-wrap items-center justify-center gap-2 mt-4">
                 <button id="error-try-https-btn" type="button" class="hidden m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 flex items-center gap-1.5">
                   <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                    <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                   Tentar HTTPS
                 </button>
                 <button id="error-copy-btn" type="button" class="m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/30 flex items-center gap-1.5">
                   <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                    <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                   </svg>
                   Copiar URL (VLC / TiviMate)
                 </button>
-                <button id="error-reload-btn" type="button" class="m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/15">
-                  Testar Recarga
-                </button>
-                <a id="error-external-link" href="#" target="_blank" rel="noopener noreferrer" class="m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-cyan-200 border border-white/15">
-                  Abrir Externo
-                </a>
+                <button id="error-reload-btn" type="button" class="m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-white border border-white/15">Testar Recarga</button>
+                <a id="error-external-link" href="#" target="_blank" rel="noopener noreferrer" class="m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-white/10 hover:bg-white/20 text-cyan-200 border border-white/15">Abrir Externo</a>
               </div>
             </div>
 
-            <!-- Barra de Controles Translúcida do Player -->
+            <!-- Controles -->
             <div class="player-controls-bar absolute bottom-3 inset-x-3 z-20">
               <div class="bg-slate-950/75 backdrop-blur-xl border border-white/15 shadow-2xl rounded-2xl px-2.5 sm:px-3 py-2 flex flex-wrap items-center justify-between gap-2">
-                <!-- Esquerda: Play/Pause, Recarregar, Volume -->
                 <div class="flex items-center gap-1.5">
-                  <button id="ctrl-play-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/12 hover:bg-white/20 flex items-center justify-center text-white" title="Reproduzir / Pausar">
-                    <svg id="icon-play" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="6 4 20 12 6 20 6 4" />
-                    </svg>
-                    <svg id="icon-pause" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="currentColor">
-                      <rect x="6" y="4" width="4" height="16" rx="1" />
-                      <rect x="14" y="4" width="4" height="16" rx="1" />
-                    </svg>
+                  <button id="ctrl-play-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" title="Reproduzir / Pausar">
+                    <svg id="icon-play" class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4" /></svg>
+                    <svg id="icon-pause" class="w-4 h-4 hidden" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
                   </button>
-
                   <button id="ctrl-reload-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-200" title="Recarregar Stream">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="23 4 23 10 17 10" />
-                      <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+                      <polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                     </svg>
                   </button>
-
                   <div class="flex items-center gap-1.5 pl-1">
                     <button id="ctrl-mute-btn" type="button" class="m3-btn w-8 h-8 rounded-xl hover:bg-white/10 flex items-center justify-center text-slate-200" title="Mudo / Som">
                       <svg id="icon-vol-on" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
                       </svg>
                       <svg id="icon-vol-off" class="w-4 h-4 hidden text-rose-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-                        <line x1="23" y1="9" x2="17" y2="15" />
-                        <line x1="17" y1="9" x2="23" y2="15" />
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
                       </svg>
                     </button>
                     <input id="ctrl-volume-slider" type="range" min="0" max="1" step="0.05" value="1" class="ios-slider w-16 sm:w-20" aria-label="Volume" />
                   </div>
                 </div>
 
-                <!-- Direita: Favoritar, Copiar M3U8, Abrir Externo, PiP, Tela Cheia -->
                 <div class="flex items-center gap-1 sm:gap-1.5">
                   <button id="ctrl-fav-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-200" title="Favoritar Canal">
                     <svg id="ctrl-fav-icon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                       <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                     </svg>
                   </button>
-
                   <button id="ctrl-copy-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-200" title="Copiar Link M3U8">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="9" y="9" width="13" height="13" rx="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
                   </button>
-
                   <button id="ctrl-external-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-200" title="Abrir Stream Externamente">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                      <polyline points="15 3 21 3 21 9" />
-                      <line x1="10" y1="14" x2="21" y2="3" />
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" />
                     </svg>
                   </button>
-
                   <button id="ctrl-pip-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/5 hover:bg-white/15 flex items-center justify-center text-slate-200" title="Picture-in-Picture">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="2" y="4" width="20" height="16" rx="2" />
-                      <rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" fill-opacity="0.3" />
+                      <rect x="2" y="4" width="20" height="16" rx="2" /><rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" fill-opacity="0.3" />
                     </svg>
                   </button>
-
-                  <button id="ctrl-fullscreen-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/12 hover:bg-white/22 flex items-center justify-center text-white" title="Tela Cheia">
+                  <button id="ctrl-fullscreen-btn" type="button" class="m3-btn w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white" title="Tela Cheia">
                     <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="15 3 21 3 21 9" />
-                      <polyline points="9 21 3 21 3 15" />
-                      <line x1="21" y1="3" x2="14" y2="10" />
-                      <line x1="3" y1="21" x2="10" y2="14" />
+                      <polyline points="15 3 21 3 21 9" /><polyline points="9 21 3 21 3 15" /><line x1="21" y1="3" x2="14" y2="10" /><line x1="3" y1="21" x2="10" y2="14" />
                     </svg>
                   </button>
                 </div>
@@ -659,7 +556,6 @@
             </div>
           </div>
 
-          <!-- Origem CDN da Playlist Atual -->
           <div class="mt-2.5 px-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-sec">
             <div class="flex items-center gap-1.5 min-w-0">
               <svg class="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -670,15 +566,11 @@
               </svg>
               <span id="cdn-origin-status" class="truncate">Origem CDN: Aguardando carregamento...</span>
             </div>
-            <span id="cache-mini-indicator" class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/12 text-indigo-400 dark:text-cyan-300 border border-indigo-400/20">
-              Cache DNS: 0
-            </span>
+            <span id="cache-mini-indicator" class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 dark:text-cyan-300 border border-indigo-400/20">Cache DNS: 0</span>
           </div>
         </div>
 
-        <!-- ==================================================================
-             BARRA DE TELEMETRIA DNS AO VIVO POR CANAL
-             ================================================================== -->
+        <!-- Telemetria DNS -->
         <div class="liquid-glass rounded-[24px] p-4">
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div class="flex items-center gap-2">
@@ -692,26 +584,17 @@
                 <p id="telemetry-resolver-line" class="text-[11px] text-sec font-mono">Resolver: Aguardando...</p>
               </div>
             </div>
-
             <div class="flex items-center gap-2">
-              <span id="telemetry-status-chip" class="px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold bg-slate-500/15 text-sec border themed-divider">
-                IDLE
-              </span>
-              <span id="telemetry-dnssec-chip" class="hidden px-2 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-400/30">
-                DNSSEC
-              </span>
+              <span id="telemetry-status-chip" class="px-2.5 py-1 rounded-full text-[10px] font-mono font-semibold bg-slate-500/15 text-sec border themed-divider">IDLE</span>
+              <span id="telemetry-dnssec-chip" class="hidden px-2 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-400/30">DNSSEC</span>
               <button id="telemetry-details-btn" type="button" class="m3-pill px-3 py-1.5 rounded-full text-[11px] font-semibold flex items-center gap-1.5">
                 <svg class="w-3.5 h-3.5 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="9.5" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                  <circle cx="12" cy="12" r="9.5" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
                 Detalhes DNS
               </button>
             </div>
           </div>
-
-          <!-- Grid de Métricas do Canal Atual -->
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <div class="p-2.5 rounded-2xl channel-card">
               <span class="block text-[10px] uppercase tracking-wider text-ter font-semibold">Hostname</span>
@@ -733,24 +616,16 @@
         </div>
       </section>
 
-      <!-- ====================================================================
-           COLUNA DIREITA: CATÁLOGO, BUSCA, AUDITORIA DNS EM LOTE E FAVORITOS
-           ==================================================================== -->
+      <!-- COLUNA DIREITA: CATÁLOGO -->
       <section class="lg:col-span-5 xl:col-span-4 liquid-glass rounded-[28px] flex flex-col overflow-hidden lg:h-[calc(100vh-144px)] min-h-[560px]">
-
-        <!-- Cabeçalho do Catálogo -->
         <div class="p-4 border-b themed-divider space-y-3 flex-shrink-0">
-          <!-- Título + Abas Todos / Favoritos -->
           <div class="flex items-center justify-between gap-2">
             <div class="min-w-0">
               <h2 id="current-playlist-name" class="text-sm sm:text-base font-extrabold truncate">Canais IPTV</h2>
               <p id="channel-counter" class="text-[11px] text-sec font-mono tabular-nums">Aguardando handshake...</p>
             </div>
-
             <div class="p-1 rounded-full bg-slate-500/15 border themed-divider flex items-center gap-1 flex-shrink-0">
-              <button id="tab-all-btn" type="button" class="m3-btn px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500 text-white shadow-sm">
-                Todos
-              </button>
+              <button id="tab-all-btn" type="button" class="m3-btn px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500 text-white shadow-sm">Todos</button>
               <button id="tab-fav-btn" type="button" class="m3-btn px-2.5 py-1 rounded-full text-xs font-semibold text-sec hover:text-indigo-400 flex items-center gap-1">
                 <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -760,44 +635,32 @@
             </div>
           </div>
 
-          <!-- Campo de Busca -->
           <div class="relative">
             <svg class="w-4 h-4 text-ter absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            <input
-              id="search-input"
-              type="text"
-              placeholder="Buscar canal, filme, série ou grupo..."
-              autocomplete="off"
-              class="themed-input w-full pl-10 pr-9 py-2.5 rounded-2xl text-xs sm:text-sm transition-all"
-            />
+            <input id="search-input" type="text" placeholder="Buscar canal, filme, série ou grupo..." autocomplete="off"
+              class="themed-input w-full pl-10 pr-9 py-2.5 rounded-2xl text-xs sm:text-sm transition-all" />
             <button id="clear-search-btn" type="button" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-slate-500/20 hover:bg-slate-500/35 flex items-center justify-center text-sec" aria-label="Limpar busca">
               <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
               </svg>
             </button>
           </div>
 
-          <!-- Barra de Auditoria DNS em Lote + Toggle "Apenas DNS Ativo" -->
           <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5">
             <button id="batch-audit-btn" type="button" class="m3-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-md shadow-indigo-500/25 flex items-center gap-1.5">
               <svg id="batch-audit-icon" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <polyline points="9 12 11 14 15 10" />
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" />
               </svg>
               <span id="batch-audit-label">Auditar DNS</span>
             </button>
-
-            <label class="flex items-center gap-2 cursor-pointer select-none">
+            <div class="flex items-center gap-2">
               <span class="text-[11px] font-semibold text-sec">Apenas DNS Ativo</span>
-              <button id="only-active-dns-switch" type="button" role="switch" aria-checked="false" class="ios-switch"></button>
-            </label>
+              <button id="only-active-dns-switch" type="button" role="switch" aria-checked="false" aria-label="Apenas DNS Ativo" class="ios-switch"></button>
+            </div>
           </div>
 
-          <!-- Progresso da Auditoria em Lote -->
           <div id="batch-audit-progress-box" class="hidden space-y-1.5 p-2.5 rounded-2xl bg-indigo-500/10 border border-indigo-400/25">
             <div class="flex items-center justify-between text-[11px]">
               <span id="batch-audit-text" class="font-medium text-indigo-400 dark:text-cyan-300 truncate">Auditando domínios...</span>
@@ -808,13 +671,10 @@
             </div>
           </div>
 
-          <!-- Chips de Categorias -->
           <div id="category-chips" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5"></div>
         </div>
 
-        <!-- Lista Virtualizada / Paginada de Canais -->
         <div id="channel-list-container" class="flex-1 overflow-y-auto p-3 space-y-2 relative">
-          <!-- Skeleton -->
           <div id="list-loading-state" class="space-y-2.5 py-2">
             <div class="h-16 rounded-2xl bg-slate-500/15 animate-pulse"></div>
             <div class="h-16 rounded-2xl bg-slate-500/15 animate-pulse"></div>
@@ -823,29 +683,21 @@
             <div class="h-16 rounded-2xl bg-slate-500/15 animate-pulse"></div>
           </div>
 
-          <!-- Itens -->
           <div id="channel-list" class="space-y-2"></div>
 
-          <!-- Botão Carregar Mais -->
           <div id="load-more-container" class="hidden pt-2 pb-4 text-center">
-            <button id="load-more-btn" type="button" class="m3-pill px-5 py-2 rounded-full text-xs font-semibold text-indigo-500 dark:text-cyan-300">
-              Carregar mais canais
-            </button>
+            <button id="load-more-btn" type="button" class="m3-pill px-5 py-2 rounded-full text-xs font-semibold text-indigo-500 dark:text-cyan-300">Carregar mais canais</button>
           </div>
 
-          <!-- Estado Vazio -->
           <div id="list-empty-state" class="hidden flex flex-col items-center justify-center text-center py-12 px-4">
             <div class="w-12 h-12 rounded-2xl channel-card flex items-center justify-center mb-3 text-sec">
               <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
             </div>
             <h3 id="empty-state-title" class="text-sm font-bold">Nenhum canal encontrado</h3>
             <p id="empty-state-desc" class="text-xs text-sec mt-1 max-w-xs">Ajuste sua busca, filtro de categoria ou o filtro de DNS ativo.</p>
-            <button id="retry-playlist-btn" type="button" class="hidden mt-4 m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-indigo-500 text-white">
-              Tentar carregar novamente
-            </button>
+            <button id="retry-playlist-btn" type="button" class="hidden mt-4 m3-btn px-4 py-2 rounded-full text-xs font-semibold bg-indigo-500 text-white">Tentar carregar novamente</button>
           </div>
         </div>
       </section>
@@ -853,18 +705,15 @@
   </div>
 
   <!-- ========================================================================
-       3. MODAL: CENTRAL DE CONTROLE DNS (BENCHMARK, LOOKUP MANUAL, CACHE, CUSTOM)
+       3. MODAL: CENTRAL DNS
        ======================================================================== -->
   <div id="dns-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-md">
     <div class="liquid-glass-elevated w-full max-w-2xl rounded-[28px] overflow-hidden animate-fade-up max-h-[92vh] flex flex-col">
-      <!-- Topo -->
       <div class="px-5 sm:px-6 py-4 border-b themed-divider flex items-center justify-between gap-3">
         <div class="flex items-center gap-3 min-w-0">
           <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-emerald-500/20 border border-indigo-400/30 flex items-center justify-center text-cyan-400 flex-shrink-0">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="9.5" />
-              <path d="M2.5 12h19" />
-              <path d="M12 2.5a14 14 0 0 1 3.8 9.5 14 14 0 0 1-3.8 9.5 14 14 0 0 1-3.8-9.5A14 14 0 0 1 12 2.5z" />
+              <circle cx="12" cy="12" r="9.5" /><path d="M2.5 12h19" /><path d="M12 2.5a14 14 0 0 1 3.8 9.5 14 14 0 0 1-3.8 9.5 14 14 0 0 1-3.8-9.5A14 14 0 0 1 12 2.5z" />
             </svg>
           </div>
           <div class="min-w-0">
@@ -873,17 +722,11 @@
           </div>
         </div>
         <button id="close-dns-modal-btn" type="button" class="m3-pill w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" aria-label="Fechar Central DNS">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
         </button>
       </div>
 
-      <!-- Corpo -->
       <div class="p-5 sm:p-6 overflow-y-auto space-y-6">
-
-        <!-- Seção 1: Benchmark ao vivo dos Provedores DoH -->
         <div>
           <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div>
@@ -891,67 +734,47 @@
               <p class="text-[11px] text-ter">Clique em um resolver para torná-lo padrão (failover automático ativo)</p>
             </div>
             <button id="modal-retest-doh-btn" type="button" class="m3-btn px-3.5 py-1.5 rounded-full text-xs font-semibold bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-500 dark:text-cyan-300 border border-indigo-400/30 flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <polyline points="23 4 23 10 17 10" />
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
-              </svg>
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>
               Testar Todos
             </button>
           </div>
           <div id="modal-doh-list" class="space-y-2"></div>
         </div>
 
-        <!-- Seção 2: Estatísticas do Cache DNS -->
         <div class="p-4 rounded-2xl channel-card flex flex-wrap items-center justify-between gap-3">
           <div class="space-y-0.5">
             <h4 class="text-xs font-bold flex items-center gap-2">
               <svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <ellipse cx="12" cy="5" rx="9" ry="3" />
-                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                <ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" /><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
               </svg>
               Cache DNS em Memória (TTL 60s – 600s)
             </h4>
             <p id="modal-cache-stats" class="text-[11px] font-mono text-sec">0 entradas em cache • 0 acertos (hits) • 0 consultas externas</p>
           </div>
-          <button id="clear-dns-cache-btn" type="button" class="m3-pill px-3.5 py-1.5 rounded-full text-xs font-semibold text-rose-400 border-rose-400/25">
-            Limpar Cache
-          </button>
+          <button id="clear-dns-cache-btn" type="button" class="m3-pill px-3.5 py-1.5 rounded-full text-xs font-semibold text-rose-400 border-rose-400/25">Limpar Cache</button>
         </div>
 
-        <!-- Seção 3: Ferramenta Lookup DNS Manual -->
         <div class="p-4 rounded-2xl channel-card space-y-3">
           <div>
             <h4 class="text-xs font-bold flex items-center gap-2">
-              <svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
+              <svg class="w-4 h-4 text-cyan-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
               Lookup DNS Manual
             </h4>
             <p class="text-[11px] text-sec mt-0.5">Consulte registros A, AAAA, CNAME ou TXT diretamente via API DoH ativa</p>
           </div>
-
           <form id="manual-lookup-form" class="flex flex-col sm:flex-row gap-2">
             <input id="lookup-domain-input" type="text" placeholder="ex: raw.githubusercontent.com" class="themed-input flex-1 px-3.5 py-2 rounded-xl text-xs font-mono" required />
             <select id="lookup-type-select" class="themed-input sm:w-28 px-3 py-2 rounded-xl text-xs font-mono font-semibold">
-              <option value="A">A</option>
-              <option value="AAAA">AAAA</option>
-              <option value="CNAME">CNAME</option>
-              <option value="TXT">TXT</option>
+              <option value="A">A</option><option value="AAAA">AAAA</option><option value="CNAME">CNAME</option><option value="TXT">TXT</option>
             </select>
-            <button id="lookup-submit-btn" type="submit" class="m3-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-md shadow-indigo-500/20">
-              Consultar
-            </button>
+            <button id="lookup-submit-btn" type="submit" class="m3-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-md shadow-indigo-500/20">Consultar</button>
           </form>
-
           <div id="lookup-result-box" class="hidden space-y-2.5 pt-2">
             <div id="lookup-records-summary" class="flex flex-wrap gap-1.5"></div>
             <pre id="lookup-json-output" class="font-mono text-[11px] leading-relaxed p-3 rounded-xl bg-slate-950/90 text-emerald-300 border border-white/10 overflow-x-auto max-h-56"></pre>
           </div>
         </div>
 
-        <!-- Seção 4: Adicionar Servidor DoH Customizado -->
         <div class="p-4 rounded-2xl channel-card space-y-3">
           <div>
             <h4 class="text-xs font-bold">Adicionar Servidor DoH JSON Customizado</h4>
@@ -966,9 +789,7 @@
               <input id="custom-doh-accept" type="checkbox" checked class="rounded border-slate-500 text-indigo-500 focus:ring-0" />
               Enviar header <span class="font-mono">Accept: application/dns-json</span>
             </label>
-            <button id="add-custom-doh-btn" type="button" class="m3-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-emerald-500 text-white shadow-md shadow-indigo-500/20">
-              Adicionar e Testar
-            </button>
+            <button id="add-custom-doh-btn" type="button" class="m3-btn px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-emerald-500 text-white shadow-md shadow-indigo-500/20">Adicionar e Testar</button>
           </div>
         </div>
       </div>
@@ -976,41 +797,28 @@
   </div>
 
   <!-- ========================================================================
-       4. MODAL: IMPORTAR LISTA M3U / M3U8 (URL EXTERNA OU ARQUIVO LOCAL)
+       4. MODAL: IMPORTAR M3U / M3U8
        ======================================================================== -->
   <div id="import-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md">
     <div class="liquid-glass-elevated w-full max-w-md rounded-[28px] overflow-hidden animate-fade-up">
       <div class="px-6 py-4 border-b themed-divider flex items-center justify-between">
         <h3 class="text-base font-extrabold">Importar Lista M3U / M3U8</h3>
         <button id="close-import-modal-btn" type="button" class="m3-pill w-8 h-8 rounded-full flex items-center justify-center" aria-label="Fechar">
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
         </button>
       </div>
-
       <div class="p-6 space-y-5">
         <div class="space-y-2">
           <label for="import-url-input" class="block text-xs font-bold text-sec">URL Direta (.m3u ou .m3u8 com CORS)</label>
           <input id="import-url-input" type="url" placeholder="https://raw.githubusercontent.com/.../lista.m3u8" class="themed-input w-full px-3.5 py-2.5 rounded-2xl text-xs font-mono" />
-          <button id="import-url-submit-btn" type="button" class="w-full m3-btn py-2.5 rounded-2xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25">
-            Validar DNS e Carregar Lista
-          </button>
+          <button id="import-url-submit-btn" type="button" class="w-full m3-btn py-2.5 rounded-2xl text-xs font-semibold bg-gradient-to-r from-indigo-500 to-cyan-500 text-white shadow-lg shadow-indigo-500/25">Validar DNS e Carregar Lista</button>
         </div>
-
         <div class="flex items-center gap-3 text-[11px] text-ter">
-          <div class="h-px flex-1 bg-slate-500/25"></div>
-          <span>OU ARQUIVO DO DISPOSITIVO</span>
-          <div class="h-px flex-1 bg-slate-500/25"></div>
+          <div class="h-px flex-1 bg-slate-500/25"></div><span>OU ARQUIVO DO DISPOSITIVO</span><div class="h-px flex-1 bg-slate-500/25"></div>
         </div>
-
         <label for="import-file-input" class="block cursor-pointer p-5 rounded-2xl border border-dashed border-indigo-400/40 hover:border-cyan-400 channel-card text-center">
           <svg class="w-7 h-7 text-cyan-400 mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-            <polyline points="14 2 14 8 20 8" />
-            <line x1="12" y1="18" x2="12" y2="12" />
-            <line x1="9" y1="15" x2="15" y2="15" />
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" />
           </svg>
           <p class="text-xs font-bold">Escolher arquivo .m3u ou .m3u8</p>
           <p class="text-[11px] text-sec mt-0.5">Leitura 100% local e instantânea no navegador</p>
@@ -1020,24 +828,12 @@
     </div>
   </div>
 
-  <!-- ========================================================================
-       5. NOTIFICAÇÕES TOAST (ZERO ALERT / ZERO CONFIRM)
-       ======================================================================== -->
+  <!-- 5. TOASTS -->
   <div id="toast-container" class="fixed bottom-20 sm:bottom-5 right-4 z-[60] flex flex-col gap-2 max-w-xs sm:max-w-sm pointer-events-none"></div>
 
-  <!-- ========================================================================
-       6. GITHUB DYNAMIC ISLAND (FLUTUANTE E INTERATIVA — https://github.com/jarodofc)
-       ======================================================================== -->
+  <!-- 6. GITHUB DYNAMIC ISLAND -->
   <nav class="gh-island-dock" aria-label="Perfil GitHub de Jarod">
-    <a
-      id="gh-dynamic-island"
-      href="https://github.com/jarodofc"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="gh-island"
-      title="Abrir GitHub: https://github.com/jarodofc"
-    >
-      <!-- Estado Compacto: Ícone GitHub SVG + Indicador Online + @jarodofc -->
+    <a id="gh-dynamic-island" href="https://github.com/jarodofc" target="_blank" rel="noopener noreferrer" class="gh-island" title="Abrir GitHub: https://github.com/jarodofc">
       <span class="gh-island-core">
         <span class="gh-island-icon-wrap" aria-hidden="true">
           <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -1047,95 +843,101 @@
         <span class="gh-island-dot" aria-label="Online"></span>
         <span class="gh-island-handle">@jarodofc</span>
       </span>
-
-      <!-- Estado Expandido (Spring): Separador + URL + Badge Abrir GitHub -->
       <span class="gh-island-expand">
         <span class="gh-island-sep" aria-hidden="true"></span>
         <span class="gh-island-url">github.com/jarodofc</span>
         <span class="gh-island-cta">
           <span>Abrir GitHub</span>
           <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M7 17L17 7" />
-            <polyline points="8 7 17 7 17 16" />
+            <path d="M7 17L17 7" /><polyline points="8 7 17 7 17 16" />
           </svg>
         </span>
       </span>
     </a>
   </nav>
+
+  <script>
+    (() => {
+      'use strict';
+
+      /* ======================================================================
+         CONFIGURAÇÃO
+         ====================================================================== */
+      const STORAGE_KEYS = {
+        FAVORITES: 'iptvbr2026_favorites',
+        THEME: 'iptvbr2026_theme',
+        SOLID: 'iptvbr2026_solid',
+        CUSTOM_DOH: 'iptvbr2026_custom_doh',
+      };
+
+      const HANDSHAKE_TEST_HOST = 'raw.githubusercontent.com';
+      const DOH_TIMEOUT_MS = 4500;
+      const MIN_TTL_SEC = 60;
+      const MAX_TTL_SEC = 600;
+      const PAGE_SIZE = 60;
+      const BATCH_CONCURRENCY = 6;
+
+      // >>> EDITE AQUI: nomes exatos dos arquivos .m3u8 na raiz do repositório Ramys/Iptv-Brasil-2026 <<<
+      const OFFICIAL_PLAYLISTS = [
+        { id: 'canais', name: 'Canais', file: 'CanaisIPTV.m3u8' },
+        { id: 'filmes-series', name: 'Filmes e Séries', file: 'FilmesSeries.m3u8' },
+      ];
+
+      const CDN_MIRRORS = [
         {
           id: 'github-master',
           label: 'GitHub Raw (master)',
           host: 'raw.githubusercontent.com',
-          buildUrl: (file) => `https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/${file}`,
+          buildUrl: (file) => `https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/${encodeURIComponent(file)}`,
         },
         {
           id: 'jsdelivr-master',
           label: 'jsDelivr CDN (@master)',
           host: 'cdn.jsdelivr.net',
-          buildUrl: (file) => `https://cdn.jsdelivr.net/gh/Ramys/Iptv-Brasil-2026@master/${file}`,
+          buildUrl: (file) => `https://cdn.jsdelivr.net/gh/Ramys/Iptv-Brasil-2026@master/${encodeURIComponent(file)}`,
         },
         {
           id: 'github-main',
           label: 'GitHub Raw (main)',
           host: 'raw.githubusercontent.com',
-          buildUrl: (file) => `https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/main/${file}`,
+          buildUrl: (file) => `https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/main/${encodeURIComponent(file)}`,
         },
       ];
 
-      // Pool com os 5 provedores públicos de DNS-over-HTTPS (JSON + CORS nativo)
       const DEFAULT_DOH_PROVIDERS = [
-        {
-          id: 'cloudflare',
-          name: 'Cloudflare DNS',
-          subtitle: '1.1.1.1 • Anycast Global',
-          template: 'https://cloudflare-dns.com/dns-query?name={host}&type={type}',
-          acceptDnsJson: true,
-          custom: false,
-        },
-        {
-          id: 'google',
-          name: 'Google Public DNS',
-          subtitle: '8.8.8.8 • DNS JSON API',
-          template: 'https://dns.google/resolve?name={host}&type={type}',
-          acceptDnsJson: false,
-          custom: false,
-        },
-        {
-          id: 'cloudflare-sec',
-          name: 'Cloudflare Security',
-          subtitle: '1.1.1.2 • Proteção Malware',
-          template: 'https://security.cloudflare-dns.com/dns-query?name={host}&type={type}',
-          acceptDnsJson: true,
-          custom: false,
-        },
-        {
-          id: 'dnssb',
-          name: 'DNS.SB Anycast',
-          subtitle: '185.222.222.222 • Privacidade',
-          template: 'https://doh.dns.sb/dns-query?name={host}&type={type}',
-          acceptDnsJson: true,
-          custom: false,
-        },
-        {
-          id: 'alidns',
-          name: 'Alibaba Public DNS',
-          subtitle: '223.5.5.5 • Alta Redundância',
-          template: 'https://dns.alidns.com/resolve?name={host}&type={type}',
-          acceptDnsJson: false,
-          custom: false,
-        },
+        { id: 'cloudflare', name: 'Cloudflare DNS', subtitle: '1.1.1.1 • Anycast Global',
+          template: 'https://cloudflare-dns.com/dns-query?name={host}&type={type}', acceptDnsJson: true, custom: false },
+        { id: 'google', name: 'Google Public DNS', subtitle: '8.8.8.8 • DNS JSON API',
+          template: 'https://dns.google/resolve?name={host}&type={type}', acceptDnsJson: false, custom: false },
+        { id: 'cloudflare-sec', name: 'Cloudflare Security', subtitle: '1.1.1.2 • Proteção Malware',
+          template: 'https://security.cloudflare-dns.com/dns-query?name={host}&type={type}', acceptDnsJson: true, custom: false },
+        { id: 'dnssb', name: 'DNS.SB Anycast', subtitle: '185.222.222.222 • Privacidade',
+          template: 'https://doh.dns.sb/dns-query?name={host}&type={type}', acceptDnsJson: true, custom: false },
+        { id: 'alidns', name: 'Alibaba Public DNS', subtitle: '223.5.5.5 • Alta Redundância',
+          template: 'https://dns.alidns.com/resolve?name={host}&type={type}', acceptDnsJson: false, custom: false },
       ];
 
-      const DNS_STATUS_MAP = {
-        0: 'NOERROR',
-        1: 'FORMERR',
-        2: 'SERVFAIL',
-        3: 'NXDOMAIN',
-        4: 'NOTIMP',
-        5: 'REFUSED',
-      };
-
+      const DNS_STATUS_MAP = { 0: 'NOERROR', 1: 'FORMERR', 2: 'SERVFAIL', 3: 'NXDOMAIN', 4: 'NOTIMP', 5: 'REFUSED' };
       const DNS_TYPE_NUM = { A: 1, CNAME: 5, TXT: 16, AAAA: 28 };
+
+      /* ======================================================================
+         UTILITÁRIOS DE STORAGE (declarados antes do estado)
+         ====================================================================== */
+      function loadJsonStorage(key, fallback) {
+        try {
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
+        } catch { return fallback; }
+      }
+      function saveJsonStorage(key, value) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+      }
+      function loadStringStorage(key, fallback) {
+        try {
+          const val = localStorage.getItem(key);
+          return val !== null ? val : fallback;
+        } catch { return fallback; }
+      }
 
       /* ======================================================================
          ESTADO GLOBAL
@@ -1145,18 +947,14 @@
         activeDohId: null,
         bootCompleted: false,
 
-        // Cache DNS em memória: Map<"host|type", { data, expiresAt, ttl, resolverName }>
         dnsCache: new Map(),
         cacheHits: 0,
         cacheMisses: 0,
 
-        // Mapa de saúde DNS por hostname (para Auditoria em Lote e indicador nos cards)
-        // Map<hostname, { ok: boolean, status: string, ip: string, isDirectIp: boolean }>
         hostHealthMap: new Map(),
         batchAuditing: false,
         batchAbortFlag: false,
 
-        // Catálogo e filtros
         currentPlaylist: OFFICIAL_PLAYLISTS[0],
         allChannels: [],
         filteredChannels: [],
@@ -1165,8 +963,8 @@
         activeTab: 'all',
         onlyActiveDns: false,
         searchQuery: '',
+        playlistLoadSeq: 0,
 
-        // Favoritos e Player
         favorites: loadJsonStorage(STORAGE_KEYS.FAVORITES, {}),
         currentChannel: null,
         currentChannelDns: null,
@@ -1174,171 +972,80 @@
         hlsRetryCount: 0,
         streamPlaybackSeq: 0,
 
-        // Aparência
-        theme: loadStringStorage(STORAGE_KEYS.THEME, 'dark'),
+        theme: loadStringStorage(STORAGE_KEYS.THEME, 'dark') === 'light' ? 'light' : 'dark',
         solidMode: loadStringStorage(STORAGE_KEYS.SOLID, 'false') === 'true',
       };
 
       /* ======================================================================
          REFERÊNCIAS DOM
          ====================================================================== */
+      const $ = (id) => document.getElementById(id);
       const dom = {
-        bootGate: document.getElementById('boot-gate'),
-        bootSubtitle: document.getElementById('boot-subtitle'),
-        bootStatusText: document.getElementById('boot-status-text'),
-        bootProgressBar: document.getElementById('boot-progress-bar'),
-        bootProgressPct: document.getElementById('boot-progress-pct'),
-        bootDohList: document.getElementById('boot-doh-list'),
-        bootEnterNowBtn: document.getElementById('boot-enter-now-btn'),
-        appShell: document.getElementById('app-shell'),
+        bootGate: $('boot-gate'), bootSubtitle: $('boot-subtitle'), bootStatusText: $('boot-status-text'),
+        bootProgressBar: $('boot-progress-bar'), bootProgressPct: $('boot-progress-pct'),
+        bootDohList: $('boot-doh-list'), bootEnterNowBtn: $('boot-enter-now-btn'), appShell: $('app-shell'),
 
-        headerDnsDot: document.getElementById('header-dns-dot'),
-        headerDnsName: document.getElementById('header-dns-name'),
-        headerDnsLatency: document.getElementById('header-dns-latency'),
-        openDnsModalBtn: document.getElementById('open-dns-modal-btn'),
-        toggleSolidBtn: document.getElementById('toggle-solid-btn'),
-        solidBtnLabel: document.getElementById('solid-btn-label'),
-        toggleThemeBtn: document.getElementById('toggle-theme-btn'),
-        iconSun: document.getElementById('icon-sun'),
-        iconMoon: document.getElementById('icon-moon'),
-        openImportModalBtn: document.getElementById('open-import-modal-btn'),
-        playlistPills: document.getElementById('playlist-pills'),
+        headerDnsDot: $('header-dns-dot'), headerDnsName: $('header-dns-name'), headerDnsLatency: $('header-dns-latency'),
+        openDnsModalBtn: $('open-dns-modal-btn'), toggleSolidBtn: $('toggle-solid-btn'), solidBtnLabel: $('solid-btn-label'),
+        toggleThemeBtn: $('toggle-theme-btn'), iconSun: $('icon-sun'), iconMoon: $('icon-moon'),
+        openImportModalBtn: $('open-import-modal-btn'), playlistPills: $('playlist-pills'),
 
-        playerWrapper: document.getElementById('player-wrapper'),
-        video: document.getElementById('video-player'),
-        playerLogoBox: document.getElementById('player-channel-logo-box'),
-        playerTitle: document.getElementById('player-channel-title'),
-        playerGroup: document.getElementById('player-channel-group'),
-        streamStatusBadge: document.getElementById('stream-status-badge'),
-        streamDnsPill: document.getElementById('stream-dns-pill'),
-        playerIdleOverlay: document.getElementById('player-idle-overlay'),
-        playerLoadingOverlay: document.getElementById('player-loading-overlay'),
-        playerLoadingText: document.getElementById('player-loading-text'),
-        playerErrorOverlay: document.getElementById('player-error-overlay'),
-        errorCategoryTag: document.getElementById('error-category-tag'),
-        errorTitle: document.getElementById('error-title'),
-        errorDetail: document.getElementById('error-detail'),
-        errorTryHttpsBtn: document.getElementById('error-try-https-btn'),
-        errorCopyBtn: document.getElementById('error-copy-btn'),
-        errorReloadBtn: document.getElementById('error-reload-btn'),
-        errorExternalLink: document.getElementById('error-external-link'),
+        playerWrapper: $('player-wrapper'), video: $('video-player'), playerLogoBox: $('player-channel-logo-box'),
+        playerTitle: $('player-channel-title'), playerGroup: $('player-channel-group'),
+        streamStatusBadge: $('stream-status-badge'), streamDnsPill: $('stream-dns-pill'),
+        playerIdleOverlay: $('player-idle-overlay'), playerLoadingOverlay: $('player-loading-overlay'),
+        playerLoadingText: $('player-loading-text'), playerErrorOverlay: $('player-error-overlay'),
+        errorCategoryTag: $('error-category-tag'), errorTitle: $('error-title'), errorDetail: $('error-detail'),
+        errorTryHttpsBtn: $('error-try-https-btn'), errorCopyBtn: $('error-copy-btn'),
+        errorReloadBtn: $('error-reload-btn'), errorExternalLink: $('error-external-link'),
 
-        ctrlPlayBtn: document.getElementById('ctrl-play-btn'),
-        iconPlay: document.getElementById('icon-play'),
-        iconPause: document.getElementById('icon-pause'),
-        ctrlReloadBtn: document.getElementById('ctrl-reload-btn'),
-        ctrlMuteBtn: document.getElementById('ctrl-mute-btn'),
-        iconVolOn: document.getElementById('icon-vol-on'),
-        iconVolOff: document.getElementById('icon-vol-off'),
-        ctrlVolumeSlider: document.getElementById('ctrl-volume-slider'),
-        ctrlFavBtn: document.getElementById('ctrl-fav-btn'),
-        ctrlFavIcon: document.getElementById('ctrl-fav-icon'),
-        ctrlCopyBtn: document.getElementById('ctrl-copy-btn'),
-        ctrlExternalBtn: document.getElementById('ctrl-external-btn'),
-        ctrlPipBtn: document.getElementById('ctrl-pip-btn'),
-        ctrlFullscreenBtn: document.getElementById('ctrl-fullscreen-btn'),
+        ctrlPlayBtn: $('ctrl-play-btn'), iconPlay: $('icon-play'), iconPause: $('icon-pause'),
+        ctrlReloadBtn: $('ctrl-reload-btn'), ctrlMuteBtn: $('ctrl-mute-btn'),
+        iconVolOn: $('icon-vol-on'), iconVolOff: $('icon-vol-off'), ctrlVolumeSlider: $('ctrl-volume-slider'),
+        ctrlFavBtn: $('ctrl-fav-btn'), ctrlFavIcon: $('ctrl-fav-icon'), ctrlCopyBtn: $('ctrl-copy-btn'),
+        ctrlExternalBtn: $('ctrl-external-btn'), ctrlPipBtn: $('ctrl-pip-btn'), ctrlFullscreenBtn: $('ctrl-fullscreen-btn'),
 
-        cdnOriginStatus: document.getElementById('cdn-origin-status'),
-        cacheMiniIndicator: document.getElementById('cache-mini-indicator'),
+        cdnOriginStatus: $('cdn-origin-status'), cacheMiniIndicator: $('cache-mini-indicator'),
 
-        telemetryResolverLine: document.getElementById('telemetry-resolver-line'),
-        telemetryStatusChip: document.getElementById('telemetry-status-chip'),
-        telemetryDnssecChip: document.getElementById('telemetry-dnssec-chip'),
-        telemetryDetailsBtn: document.getElementById('telemetry-details-btn'),
-        telHostname: document.getElementById('tel-hostname'),
-        telIp: document.getElementById('tel-ip'),
-        telTtl: document.getElementById('tel-ttl'),
-        telLatency: document.getElementById('tel-latency'),
+        telemetryResolverLine: $('telemetry-resolver-line'), telemetryStatusChip: $('telemetry-status-chip'),
+        telemetryDnssecChip: $('telemetry-dnssec-chip'), telemetryDetailsBtn: $('telemetry-details-btn'),
+        telHostname: $('tel-hostname'), telIp: $('tel-ip'), telTtl: $('tel-ttl'), telLatency: $('tel-latency'),
 
-        currentPlaylistName: document.getElementById('current-playlist-name'),
-        channelCounter: document.getElementById('channel-counter'),
-        tabAllBtn: document.getElementById('tab-all-btn'),
-        tabFavBtn: document.getElementById('tab-fav-btn'),
-        favCountBadge: document.getElementById('fav-count-badge'),
-        searchInput: document.getElementById('search-input'),
-        clearSearchBtn: document.getElementById('clear-search-btn'),
-        batchAuditBtn: document.getElementById('batch-audit-btn'),
-        batchAuditIcon: document.getElementById('batch-audit-icon'),
-        batchAuditLabel: document.getElementById('batch-audit-label'),
-        onlyActiveDnsSwitch: document.getElementById('only-active-dns-switch'),
-        batchAuditProgressBox: document.getElementById('batch-audit-progress-box'),
-        batchAuditText: document.getElementById('batch-audit-text'),
-        batchAuditStats: document.getElementById('batch-audit-stats'),
-        batchAuditBar: document.getElementById('batch-audit-bar'),
-        categoryChips: document.getElementById('category-chips'),
-        channelListContainer: document.getElementById('channel-list-container'),
-        listLoadingState: document.getElementById('list-loading-state'),
-        channelList: document.getElementById('channel-list'),
-        loadMoreContainer: document.getElementById('load-more-container'),
-        loadMoreBtn: document.getElementById('load-more-btn'),
-        listEmptyState: document.getElementById('list-empty-state'),
-        emptyStateTitle: document.getElementById('empty-state-title'),
-        emptyStateDesc: document.getElementById('empty-state-desc'),
-        retryPlaylistBtn: document.getElementById('retry-playlist-btn'),
+        currentPlaylistName: $('current-playlist-name'), channelCounter: $('channel-counter'),
+        tabAllBtn: $('tab-all-btn'), tabFavBtn: $('tab-fav-btn'), favCountBadge: $('fav-count-badge'),
+        searchInput: $('search-input'), clearSearchBtn: $('clear-search-btn'),
+        batchAuditBtn: $('batch-audit-btn'), batchAuditIcon: $('batch-audit-icon'), batchAuditLabel: $('batch-audit-label'),
+        onlyActiveDnsSwitch: $('only-active-dns-switch'), batchAuditProgressBox: $('batch-audit-progress-box'),
+        batchAuditText: $('batch-audit-text'), batchAuditStats: $('batch-audit-stats'), batchAuditBar: $('batch-audit-bar'),
+        categoryChips: $('category-chips'), channelListContainer: $('channel-list-container'),
+        listLoadingState: $('list-loading-state'), channelList: $('channel-list'),
+        loadMoreContainer: $('load-more-container'), loadMoreBtn: $('load-more-btn'),
+        listEmptyState: $('list-empty-state'), emptyStateTitle: $('empty-state-title'),
+        emptyStateDesc: $('empty-state-desc'), retryPlaylistBtn: $('retry-playlist-btn'),
 
-        dnsModal: document.getElementById('dns-modal'),
-        closeDnsModalBtn: document.getElementById('close-dns-modal-btn'),
-        modalRetestDohBtn: document.getElementById('modal-retest-doh-btn'),
-        modalDohList: document.getElementById('modal-doh-list'),
-        modalCacheStats: document.getElementById('modal-cache-stats'),
-        clearDnsCacheBtn: document.getElementById('clear-dns-cache-btn'),
-        manualLookupForm: document.getElementById('manual-lookup-form'),
-        lookupDomainInput: document.getElementById('lookup-domain-input'),
-        lookupTypeSelect: document.getElementById('lookup-type-select'),
-        lookupSubmitBtn: document.getElementById('lookup-submit-btn'),
-        lookupResultBox: document.getElementById('lookup-result-box'),
-        lookupRecordsSummary: document.getElementById('lookup-records-summary'),
-        lookupJsonOutput: document.getElementById('lookup-json-output'),
-        customDohName: document.getElementById('custom-doh-name'),
-        customDohUrl: document.getElementById('custom-doh-url'),
-        customDohAccept: document.getElementById('custom-doh-accept'),
-        addCustomDohBtn: document.getElementById('add-custom-doh-btn'),
+        dnsModal: $('dns-modal'), closeDnsModalBtn: $('close-dns-modal-btn'), modalRetestDohBtn: $('modal-retest-doh-btn'),
+        modalDohList: $('modal-doh-list'), modalCacheStats: $('modal-cache-stats'), clearDnsCacheBtn: $('clear-dns-cache-btn'),
+        manualLookupForm: $('manual-lookup-form'), lookupDomainInput: $('lookup-domain-input'),
+        lookupTypeSelect: $('lookup-type-select'), lookupSubmitBtn: $('lookup-submit-btn'),
+        lookupResultBox: $('lookup-result-box'), lookupRecordsSummary: $('lookup-records-summary'),
+        lookupJsonOutput: $('lookup-json-output'), customDohName: $('custom-doh-name'),
+        customDohUrl: $('custom-doh-url'), customDohAccept: $('custom-doh-accept'), addCustomDohBtn: $('add-custom-doh-btn'),
 
-        importModal: document.getElementById('import-modal'),
-        closeImportModalBtn: document.getElementById('close-import-modal-btn'),
-        importUrlInput: document.getElementById('import-url-input'),
-        importUrlSubmitBtn: document.getElementById('import-url-submit-btn'),
-        importFileInput: document.getElementById('import-file-input'),
+        importModal: $('import-modal'), closeImportModalBtn: $('close-import-modal-btn'),
+        importUrlInput: $('import-url-input'), importUrlSubmitBtn: $('import-url-submit-btn'),
+        importFileInput: $('import-file-input'),
 
-        toastContainer: document.getElementById('toast-container'),
-        ghDynamicIsland: document.getElementById('gh-dynamic-island'),
+        toastContainer: $('toast-container'), ghDynamicIsland: $('gh-dynamic-island'),
       };
 
       /* ======================================================================
-         UTILITÁRIOS: STORAGE, SEGURANÇA HTML, CLIPBOARD, TOAST, IP/HOST
+         UTILITÁRIOS
          ====================================================================== */
-      function loadJsonStorage(key, fallback) {
-        try {
-          const raw = localStorage.getItem(key);
-          return raw ? JSON.parse(raw) : fallback;
-        } catch {
-          return fallback;
-        }
-      }
-
-      function saveJsonStorage(key, value) {
-        try {
-          localStorage.setItem(key, JSON.stringify(value));
-        } catch {}
-      }
-
-      function loadStringStorage(key, fallback) {
-        try {
-          const val = localStorage.getItem(key);
-          return val !== null ? val : fallback;
-        } catch {
-          return fallback;
-        }
-      }
-
       function escapeHtml(str) {
         if (str === null || str === undefined) return '';
         return String(str)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
       }
 
       function isIpAddress(host) {
@@ -1347,57 +1054,57 @@
         if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(clean)) {
           return clean.split('.').every(n => Number(n) >= 0 && Number(n) <= 255);
         }
-        return clean.includes(':'); // IPv6 literal
+        return clean.includes(':');
       }
 
       function extractHostname(urlStr) {
         try {
-          const u = new URL(urlStr);
-          return u.hostname.replace(/^\[|\]$/g, '').toLowerCase();
-        } catch {
-          return '';
-        }
+          return new URL(urlStr).hostname.replace(/^\[|\]$/g, '').toLowerCase();
+        } catch { return ''; }
       }
 
-      // Cópia compatível com iFrame (document.execCommand)
+      // Só permite http(s) em logos para evitar esquemas perigosos (javascript:, data:)
+      function safeImageUrl(url) {
+        return /^https?:\/\//i.test(url || '') ? url : '';
+      }
+
       function copyToClipboard(text, successMsg = 'Copiado para a área de transferência') {
         if (!text) return;
-        try {
-          const ta = document.createElement('textarea');
-          ta.value = text;
-          ta.setAttribute('readonly', '');
-          ta.style.position = 'fixed';
-          ta.style.top = '-9999px';
-          ta.style.opacity = '0';
-          document.body.appendChild(ta);
-          ta.select();
-          ta.setSelectionRange(0, text.length);
-          const ok = document.execCommand('copy');
-          document.body.removeChild(ta);
-          showToast(ok ? successMsg : 'Não foi possível copiar o link.', ok ? 'success' : 'error');
-        } catch {
-          showToast('Erro ao copiar para a área de transferência.', 'error');
+        const fallback = () => {
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
+            document.body.appendChild(ta);
+            ta.select();
+            ta.setSelectionRange(0, text.length);
+            const ok = document.execCommand('copy');
+            document.body.removeChild(ta);
+            showToast(ok ? successMsg : 'Não foi possível copiar o link.', ok ? 'success' : 'error');
+          } catch {
+            showToast('Erro ao copiar para a área de transferência.', 'error');
+          }
+        };
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).then(() => showToast(successMsg, 'success')).catch(fallback);
+        } else {
+          fallback();
         }
       }
 
       function showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        const borderColors = {
-          success: 'border-emerald-400/40',
-          error: 'border-rose-400/40',
-          warning: 'border-amber-400/40',
-          info: 'border-cyan-400/40',
-        };
+        const borderColors = { success: 'border-emerald-400/40', error: 'border-rose-400/40', warning: 'border-amber-400/40', info: 'border-cyan-400/40' };
         const icons = {
           success: '<svg class="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polyline points="20 6 9 17 4 12"/></svg>',
           error: '<svg class="w-4 h-4 text-rose-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
           warning: '<svg class="w-4 h-4 text-amber-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
           info: '<svg class="w-4 h-4 text-cyan-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
         };
+        const toast = document.createElement('div');
         toast.className = `pointer-events-auto liquid-glass-elevated rounded-2xl px-3.5 py-2.5 flex items-center gap-2.5 text-xs font-semibold animate-fade-up ${borderColors[type] || borderColors.info}`;
         toast.innerHTML = `${icons[type] || icons.info}<span>${escapeHtml(message)}</span>`;
         dom.toastContainer.appendChild(toast);
-
         setTimeout(() => {
           toast.style.transition = 'opacity 0.28s ease, transform 0.28s ease';
           toast.style.opacity = '0';
@@ -1407,26 +1114,18 @@
       }
 
       /* ======================================================================
-         APARÊNCIA: TEMA ESCURO/CLARO + MODO SÓLIDO (ACESSIBILIDADE)
+         APARÊNCIA
          ====================================================================== */
       function applyThemeAndSurface() {
         const html = document.documentElement;
-        if (state.theme === 'light') {
-          html.classList.remove('dark');
-          html.classList.add('light');
-          dom.iconSun.classList.remove('hidden');
-          dom.iconMoon.classList.add('hidden');
-        } else {
-          html.classList.remove('light');
-          html.classList.add('dark');
-          dom.iconSun.classList.add('hidden');
-          dom.iconMoon.classList.remove('hidden');
-        }
-
+        const isLight = state.theme === 'light';
+        html.classList.toggle('light', isLight);
+        html.classList.toggle('dark', !isLight);
+        dom.iconSun.classList.toggle('hidden', !isLight);
+        dom.iconMoon.classList.toggle('hidden', isLight);
         html.classList.toggle('solid-mode', state.solidMode);
         dom.solidBtnLabel.textContent = state.solidMode ? 'Sólido' : 'Vidro';
         dom.toggleSolidBtn.classList.toggle('active', state.solidMode);
-
         try {
           localStorage.setItem(STORAGE_KEYS.THEME, state.theme);
           localStorage.setItem(STORAGE_KEYS.SOLID, String(state.solidMode));
@@ -1434,25 +1133,19 @@
       }
 
       /* ======================================================================
-         MOTOR DNS-OVER-HTTPS (DoH JSON NATIVO + CACHE TTL + FAILOVER)
+         MOTOR DoH
          ====================================================================== */
       function initDohPool() {
         const savedCustom = loadJsonStorage(STORAGE_KEYS.CUSTOM_DOH, []);
-        state.dohProviders = [...DEFAULT_DOH_PROVIDERS, ...savedCustom].map(p => ({
-          ...p,
-          status: 'idle', // 'idle' | 'testing' | 'online' | 'offline'
-          latency: null,
-          resolvedIp: null,
-          dnssec: false,
+        const customList = Array.isArray(savedCustom) ? savedCustom : [];
+        state.dohProviders = [...DEFAULT_DOH_PROVIDERS, ...customList].map(p => ({
+          ...p, status: 'idle', latency: null, resolvedIp: null, dnssec: false,
         }));
       }
 
       function saveCustomDohProviders() {
-        const customOnly = state.dohProviders
-          .filter(p => p.custom)
-          .map(({ id, name, subtitle, template, acceptDnsJson, custom }) => ({
-            id, name, subtitle, template, acceptDnsJson, custom
-          }));
+        const customOnly = state.dohProviders.filter(p => p.custom)
+          .map(({ id, name, subtitle, template, acceptDnsJson, custom }) => ({ id, name, subtitle, template, acceptDnsJson, custom }));
         saveJsonStorage(STORAGE_KEYS.CUSTOM_DOH, customOnly);
       }
 
@@ -1460,9 +1153,7 @@
         const encHost = encodeURIComponent(host);
         const encType = encodeURIComponent(type);
         if (provider.template.includes('{host}') || provider.template.includes('{type}')) {
-          return provider.template
-            .replace(/\{host\}/g, encHost)
-            .replace(/\{type\}/g, encType);
+          return provider.template.replace(/\{host\}/g, encHost).replace(/\{type\}/g, encType);
         }
         const sep = provider.template.includes('?') ? '&' : '?';
         return `${provider.template}${sep}name=${encHost}&type=${encType}`;
@@ -1475,12 +1166,10 @@
       }
 
       function getHealthyDohSorted() {
-        return state.dohProviders
-          .filter(p => p.status === 'online')
+        return state.dohProviders.filter(p => p.status === 'online')
           .sort((a, b) => (a.latency ?? 99999) - (b.latency ?? 99999));
       }
 
-      // Executa uma consulta DoH direta em um provedor específico
       async function queryProviderDoh(provider, host, type = 'A', timeoutMs = DOH_TIMEOUT_MS) {
         const url = buildDohUrl(provider, host, type);
         const controller = new AbortController();
@@ -1488,57 +1177,34 @@
         const start = performance.now();
 
         try {
-          const headers = provider.acceptDnsJson
-            ? { Accept: 'application/dns-json' }
-            : { Accept: 'application/json' };
-
           const resp = await fetch(url, {
             method: 'GET',
-            headers,
+            headers: { Accept: provider.acceptDnsJson ? 'application/dns-json' : 'application/json' },
             signal: controller.signal,
             cache: 'no-store',
           });
-          clearTimeout(timer);
-
           if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
           const json = await resp.json();
-          if (typeof json.Status !== 'number') {
-            throw new Error('Payload DoH JSON inválido');
-          }
+          if (typeof json.Status !== 'number') throw new Error('Payload DoH JSON inválido');
 
-          const latency = Math.max(8, Math.round(performance.now() - start));
+          const latency = Math.max(1, Math.round(performance.now() - start));
           const answers = Array.isArray(json.Answer) ? json.Answer : [];
           const statusCode = json.Status;
-          const statusText = DNS_STATUS_MAP[statusCode] || `RCODE_${statusCode}`;
-
-          // Calcula TTL respeitando mínimo 60s e máximo 600s
           const ttls = answers.map(a => Number(a.TTL)).filter(n => Number.isFinite(n) && n > 0);
           const rawTtl = ttls.length ? Math.min(...ttls) : 120;
           const clampedTtl = Math.min(MAX_TTL_SEC, Math.max(MIN_TTL_SEC, rawTtl));
 
           return {
-            ok: true,
-            host,
-            type,
-            statusCode,
-            statusText,
-            dnssec: Boolean(json.AD),
-            answers,
-            ttl: clampedTtl,
-            rawTtl,
-            latency,
-            resolverId: provider.id,
-            resolverName: provider.name,
-            rawJson: json,
-            fromCache: false,
+            ok: true, host, type, statusCode,
+            statusText: DNS_STATUS_MAP[statusCode] || `RCODE_${statusCode}`,
+            dnssec: Boolean(json.AD), answers, ttl: clampedTtl, rawTtl, latency,
+            resolverId: provider.id, resolverName: provider.name, rawJson: json, fromCache: false,
           };
-        } catch (err) {
+        } finally {
           clearTimeout(timer);
-          throw err;
         }
       }
 
-      // Consulta DoH com Cache TTL (60s-600s) + Failover automático entre provedores
       async function resolveDns(host, type = 'A', options = {}) {
         const cleanHost = String(host || '').trim().toLowerCase().replace(/\.$/, '');
         const cleanType = String(type || 'A').toUpperCase();
@@ -1551,9 +1217,7 @@
             state.cacheHits++;
             updateCacheStatsUi();
             return {
-              ...cached.result,
-              fromCache: true,
-              latency: 0,
+              ...cached.result, fromCache: true, latency: 0,
               remainingTtl: Math.max(1, Math.round((cached.expiresAt - now) / 1000)),
             };
           } else if (cached) {
@@ -1563,26 +1227,20 @@
 
         state.cacheMisses++;
 
-        // Monta fila de failover começando pelo resolver ativo
+        // Fila de failover: ativo -> online por latência -> idle/testing -> offline (por último)
         const queue = [];
+        const push = (p) => { if (p && !queue.some(q => q.id === p.id)) queue.push(p); };
         const active = getActiveDohProvider();
-        if (active) queue.push(active);
-        for (const p of getHealthyDohSorted()) {
-          if (!queue.some(q => q.id === p.id)) queue.push(p);
-        }
-        for (const p of state.dohProviders) {
-          if (!queue.some(q => q.id === p.id)) queue.push(p);
-        }
+        if (active && active.status !== 'offline') push(active);
+        getHealthyDohSorted().forEach(push);
+        state.dohProviders.filter(p => p.status !== 'offline').forEach(push);
+        state.dohProviders.forEach(push);
 
         let lastError = null;
         for (const provider of queue) {
           try {
             const result = await queryProviderDoh(provider, cleanHost, cleanType);
-            // Guarda no cache respeitando TTL (60s - 600s)
-            state.dnsCache.set(cacheKey, {
-              result,
-              expiresAt: Date.now() + result.ttl * 1000,
-            });
+            state.dnsCache.set(cacheKey, { result, expiresAt: Date.now() + result.ttl * 1000 });
             updateCacheStatsUi();
             return { ...result, remainingTtl: result.ttl };
           } catch (err) {
@@ -1594,121 +1252,62 @@
         throw lastError || new Error('Todos os provedores DoH falharam.');
       }
 
-      // Pre-flight completo por canal: A + AAAA + CNAME em paralelo (ou IP Direto)
       async function preflightChannelDns(streamUrl) {
         const host = extractHostname(streamUrl);
-        if (!host) {
-          return {
-            host: 'Inválido',
-            isDirectIp: false,
-            ok: false,
-            statusText: 'URL_INVALIDA',
-            ipv4: [],
-            ipv6: [],
-            cname: [],
-            ttl: null,
-            dnssec: false,
-            latency: 0,
-            resolverName: getActiveDohProvider()?.name || 'DoH',
-            fromCache: false,
-          };
-        }
+        const baseFail = {
+          host: host || 'Inválido', isDirectIp: false, ok: false, statusCode: null, statusText: 'DOH_ERRO',
+          ipv4: [], ipv6: [], cname: [], ttl: null, dnssec: false, latency: 0,
+          resolverName: getActiveDohProvider()?.name || 'DoH', fromCache: false,
+        };
+
+        if (!host) return { ...baseFail, statusText: 'URL_INVALIDA' };
 
         if (isIpAddress(host)) {
           const isV6 = host.includes(':');
-          const res = {
-            host,
-            isDirectIp: true,
-            ok: true,
-            statusText: 'IP Direto',
-            ipv4: isV6 ? [] : [host],
-            ipv6: isV6 ? [host] : [],
-            cname: [],
-            ttl: null,
-            dnssec: false,
-            latency: 0,
-            resolverName: 'Conexão IP Literal',
-            fromCache: false,
-          };
           state.hostHealthMap.set(host, { ok: true, status: 'IP Direto', ip: host, isDirectIp: true });
-          return res;
+          return {
+            host, isDirectIp: true, ok: true, statusCode: 0, statusText: 'IP Direto',
+            ipv4: isV6 ? [] : [host], ipv6: isV6 ? [host] : [], cname: [], ttl: null, dnssec: false,
+            latency: 0, resolverName: 'Conexão IP Literal', fromCache: false,
+          };
         }
 
         const [aRes, aaaaRes, cnameRes] = await Promise.allSettled([
-          resolveDns(host, 'A'),
-          resolveDns(host, 'AAAA'),
-          resolveDns(host, 'CNAME'),
+          resolveDns(host, 'A'), resolveDns(host, 'AAAA'), resolveDns(host, 'CNAME'),
         ]);
-
         const aVal = aRes.status === 'fulfilled' ? aRes.value : null;
         const aaaaVal = aaaaRes.status === 'fulfilled' ? aaaaRes.value : null;
         const cnameVal = cnameRes.status === 'fulfilled' ? cnameRes.value : null;
         const primary = aVal || aaaaVal || cnameVal;
 
-        if (!primary) {
-          const failObj = {
-            host,
-            isDirectIp: false,
-            ok: false,
-            statusText: 'DOH_ERRO',
-            ipv4: [],
-            ipv6: [],
-            cname: [],
-            ttl: null,
-            dnssec: false,
-            latency: 0,
-            resolverName: getActiveDohProvider()?.name || 'DoH',
-            fromCache: false,
-          };
-          return failObj;
-        }
+        if (!primary) return baseFail;
 
         const ipv4 = (aVal?.answers || []).filter(r => r.type === DNS_TYPE_NUM.A).map(r => r.data);
         const ipv6 = (aaaaVal?.answers || []).filter(r => r.type === DNS_TYPE_NUM.AAAA).map(r => r.data);
-        const cnameSet = new Set([
-          ...(aVal?.answers || []).filter(r => r.type === DNS_TYPE_NUM.CNAME).map(r => r.data.replace(/\.$/, '')),
-          ...(cnameVal?.answers || []).filter(r => r.type === DNS_TYPE_NUM.CNAME).map(r => r.data.replace(/\.$/, '')),
-        ]);
-        const cname = Array.from(cnameSet);
+        const cname = Array.from(new Set([
+          ...(aVal?.answers || []).filter(r => r.type === DNS_TYPE_NUM.CNAME).map(r => String(r.data).replace(/\.$/, '')),
+          ...(cnameVal?.answers || []).filter(r => r.type === DNS_TYPE_NUM.CNAME).map(r => String(r.data).replace(/\.$/, '')),
+        ]));
 
-        const statusText = primary.statusText;
         const hasAddress = ipv4.length > 0 || ipv6.length > 0;
         const ok = primary.statusCode === 0 && (hasAddress || cname.length > 0);
         const latency = Math.max(aVal?.latency || 0, aaaaVal?.latency || 0, cnameVal?.latency || 0);
-        const fromCache = Boolean(aVal?.fromCache && (!aaaaVal || aaaaVal.fromCache));
+        const allCached = [aVal, aaaaVal, cnameVal].filter(Boolean).every(v => v.fromCache);
 
-        state.hostHealthMap.set(host, {
-          ok,
-          status: statusText,
-          ip: ipv4[0] || ipv6[0] || cname[0] || '',
-          isDirectIp: false,
-        });
+        state.hostHealthMap.set(host, { ok, status: primary.statusText, ip: ipv4[0] || ipv6[0] || cname[0] || '', isDirectIp: false });
 
         return {
-          host,
-          isDirectIp: false,
-          ok,
-          statusCode: primary.statusCode,
-          statusText,
-          ipv4,
-          ipv6,
-          cname,
-          ttl: primary.remainingTtl ?? primary.ttl,
-          dnssec: Boolean(aVal?.dnssec || aaaaVal?.dnssec),
-          latency,
-          resolverName: primary.resolverName,
-          fromCache,
+          host, isDirectIp: false, ok, statusCode: primary.statusCode, statusText: primary.statusText,
+          ipv4, ipv6, cname, ttl: primary.remainingTtl ?? primary.ttl,
+          dnssec: Boolean(aVal?.dnssec || aaaaVal?.dnssec), latency,
+          resolverName: primary.resolverName, fromCache: allCached,
         };
       }
 
-      // Benchmark individual de um provedor DoH contra raw.githubusercontent.com
       async function benchmarkDohProvider(provider) {
         provider.status = 'testing';
-        provider.latency = null;
-        provider.resolvedIp = null;
-        provider.dnssec = false;
+        provider.latency = null; provider.resolvedIp = null; provider.dnssec = false;
         renderDohViews();
-
         try {
           const res = await queryProviderDoh(provider, HANDSHAKE_TEST_HOST, 'A', DOH_TIMEOUT_MS);
           const firstIp = res.answers.find(a => a.type === DNS_TYPE_NUM.A)?.data || 'OK';
@@ -1720,41 +1319,31 @@
           return { provider, ok: provider.status === 'online', latency: res.latency, ip: firstIp };
         } catch (err) {
           provider.status = 'offline';
-          provider.latency = null;
-          provider.resolvedIp = null;
-          provider.dnssec = false;
           renderDohViews();
           return { provider, ok: false, error: err.message };
         }
       }
 
-      // Handshake inicial na Tela de Boot (5 provedores DoH em paralelo)
       async function runBootDnsHandshake() {
         let finished = 0;
-        let winner = null;
         const total = state.dohProviders.length;
-
         renderBootDohList();
 
-        const promises = state.dohProviders.map(async (provider) => {
+        await Promise.allSettled(state.dohProviders.map(async (provider) => {
           const res = await benchmarkDohProvider(provider);
           finished++;
-
           const pct = Math.min(100, Math.round((finished / total) * 100));
           dom.bootProgressBar.style.width = `${pct}%`;
           dom.bootProgressPct.textContent = `${pct}%`;
 
-          if (res.ok && (!winner || res.latency < winner.latency)) {
-            winner = res.provider;
-            state.activeDohId = winner.id;
-            updateHeaderDnsBadge();
+          if (res.ok) {
+            const current = state.dohProviders.find(p => p.id === state.activeDohId);
+            if (!current || current.status !== 'online' || res.latency < (current.latency ?? Infinity)) {
+              state.activeDohId = provider.id;
+            }
           }
-
-          renderBootDohList();
-          return res;
-        });
-
-        await Promise.allSettled(promises);
+          renderDohViews();
+        }));
 
         if (state.bootCompleted) return;
 
@@ -1762,31 +1351,19 @@
         if (healthy.length > 0) {
           const fastest = healthy[0];
           state.activeDohId = fastest.id;
-          updateHeaderDnsBadge();
-          renderBootDohList();
-
-          dom.bootProgressBar.style.width = '100%';
-          dom.bootProgressPct.textContent = '100%';
+          renderDohViews();
           dom.bootStatusText.innerHTML = `
-            <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-            <span class="text-emerald-400 font-bold">Vencedor: ${escapeHtml(fastest.name)} (${fastest.latency} ms • ${escapeHtml(fastest.resolvedIp)})</span>
-          `;
-          dom.bootSubtitle.textContent = 'DNS de menor latência ativado. Buscando CanaisIPTV.m3u8 diretamente...';
-          setTimeout(() => enterMainApp(), 750);
+            <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+            <span class="text-emerald-400 font-bold truncate">Vencedor: ${escapeHtml(fastest.name)} (${fastest.latency} ms • ${escapeHtml(fastest.resolvedIp)})</span>`;
+          dom.bootSubtitle.textContent = 'DNS de menor latência ativado. Carregando a lista de canais diretamente...';
+          setTimeout(enterMainApp, 750);
         } else {
           state.activeDohId = state.dohProviders[0].id;
-          updateHeaderDnsBadge();
+          renderDohViews();
           dom.bootStatusText.innerHTML = `
-            <svg class="w-4 h-4 text-amber-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-            <span class="text-amber-300 font-semibold">Rede instável no handshake — entrando com fallback CDN direto</span>
-          `;
-          setTimeout(() => enterMainApp(), 950);
+            <svg class="w-4 h-4 text-amber-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+            <span class="text-amber-300 font-semibold truncate">Rede instável no handshake — entrando com fallback CDN direto</span>`;
+          setTimeout(enterMainApp, 950);
         }
       }
 
@@ -1795,20 +1372,16 @@
         state.bootCompleted = true;
 
         if (!state.activeDohId) {
-          const healthy = getHealthyDohSorted();
-          state.activeDohId = (healthy[0] || state.dohProviders[0]).id;
+          state.activeDohId = (getHealthyDohSorted()[0] || state.dohProviders[0]).id;
         }
 
         dom.bootGate.style.opacity = '0';
         dom.bootGate.style.transform = 'scale(1.02)';
         dom.bootGate.style.pointerEvents = 'none';
         dom.appShell.classList.remove('opacity-0', 'pointer-events-none');
-
         setTimeout(() => dom.bootGate.classList.add('hidden'), 650);
 
-        updateHeaderDnsBadge();
         renderDohViews();
-        updateTelemetryResolverLine();
         loadOfficialPlaylist(state.currentPlaylist);
       }
 
@@ -1818,17 +1391,14 @@
         const healthy = getHealthyDohSorted();
         if (healthy.length > 0) {
           state.activeDohId = healthy[0].id;
-          updateHeaderDnsBadge();
           renderDohViews();
-          updateTelemetryResolverLine();
-          showToast(`${healthy.length} provedores online. Mais rápido: ${healthy[0].name} (${healthy[0].latency} ms)`, 'success');
+          showToast(`${healthy.length} provedor(es) online. Mais rápido: ${healthy[0].name} (${healthy[0].latency} ms)`, 'success');
         } else {
           showToast('Nenhum provedor DoH respondeu neste teste.', 'warning');
         }
       }
 
       function updateCacheStatsUi() {
-        // Expurga expirados na contagem
         const now = Date.now();
         for (const [k, v] of state.dnsCache.entries()) {
           if (v.expiresAt <= now) state.dnsCache.delete(k);
@@ -1841,19 +1411,17 @@
       function updateHeaderDnsBadge() {
         const active = getActiveDohProvider();
         if (!active) return;
-        const isOnline = active.status === 'online';
-        dom.headerDnsDot.className = `w-2 h-2 rounded-full ${
-          isOnline
-            ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
-            : active.status === 'offline'
-              ? 'bg-rose-400'
-              : 'bg-cyan-400 animate-pulse'
-        }`;
+        const dotCls = active.status === 'online'
+          ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
+          : active.status === 'offline' ? 'bg-rose-400' : 'bg-cyan-400 animate-pulse';
+        dom.headerDnsDot.className = `w-2 h-2 rounded-full ${dotCls}`;
         dom.headerDnsName.textContent = active.name;
         dom.headerDnsLatency.textContent = active.latency ? `${active.latency} ms` : 'DoH';
       }
 
       function updateTelemetryResolverLine() {
+        // Não sobrescreve a linha enquanto há um canal com telemetria própria
+        if (state.currentChannelDns) return;
         const active = getActiveDohProvider();
         if (!active) return;
         dom.telemetryResolverLine.textContent = `Resolver ativo: ${active.name}${active.latency ? ` (${active.latency} ms)` : ''}`;
@@ -1862,41 +1430,22 @@
       function renderBootDohList() {
         dom.bootDohList.innerHTML = state.dohProviders.map(p => {
           const isWinner = state.activeDohId === p.id && p.status === 'online';
-          let rightSide = '';
-
+          let right = '';
           if (p.status === 'testing' || p.status === 'idle') {
-            rightSide = `
-              <span class="inline-flex items-center gap-1.5 text-[11px] font-mono text-cyan-400">
-                <svg class="w-3 h-3 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/>
-                </svg>
-                Testando
-              </span>`;
+            right = `<span class="inline-flex items-center gap-1.5 text-[11px] font-mono text-cyan-400">
+              <svg class="w-3 h-3 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg>Testando</span>`;
           } else if (p.status === 'online') {
             const latColor = p.latency < 220 ? 'text-emerald-400' : p.latency < 550 ? 'text-cyan-400' : 'text-amber-400';
-            rightSide = `
-              <div class="flex items-center gap-1.5 flex-wrap justify-end">
-                ${p.dnssec ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-400/30">DNSSEC</span>' : ''}
-                <span class="font-mono text-[10px] text-sec hidden sm:inline">${escapeHtml(p.resolvedIp || '')}</span>
-                <span class="inline-flex items-center gap-1 font-mono text-[11px] font-bold ${latColor} tabular-nums">
-                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  ${p.latency} ms
-                </span>
-              </div>`;
+            right = `<div class="flex items-center gap-1.5 flex-wrap justify-end">
+              ${p.dnssec ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-400/30">DNSSEC</span>' : ''}
+              <span class="font-mono text-[10px] text-sec hidden sm:inline">${escapeHtml(p.resolvedIp || '')}</span>
+              <span class="inline-flex items-center gap-1 font-mono text-[11px] font-bold ${latColor} tabular-nums"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>${p.latency} ms</span>
+            </div>`;
           } else {
-            rightSide = `
-              <span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-rose-400">
-                <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                Falha
-              </span>`;
+            right = `<span class="inline-flex items-center gap-1 font-mono text-[11px] font-semibold text-rose-400"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Falha</span>`;
           }
-
           return `
-            <div class="flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-2xl border transition-all ${
-              isWinner
-                ? 'bg-emerald-500/15 border-emerald-400/50 shadow-md shadow-emerald-500/10'
-                : 'channel-card'
-            }">
+            <div class="flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-2xl border transition-all ${isWinner ? 'bg-emerald-500/15 border-emerald-400/50 shadow-md shadow-emerald-500/10' : 'channel-card'}">
               <div class="min-w-0">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-bold truncate">${escapeHtml(p.name)}</span>
@@ -1904,9 +1453,8 @@
                 </div>
                 <p class="text-[10px] font-mono text-sec truncate">${escapeHtml(p.subtitle || p.template)}</p>
               </div>
-              <div class="flex-shrink-0">${rightSide}</div>
-            </div>
-          `;
+              <div class="flex-shrink-0">${right}</div>
+            </div>`;
         }).join('');
       }
 
@@ -1914,43 +1462,31 @@
         dom.modalDohList.innerHTML = state.dohProviders.map(p => {
           const isSelected = state.activeDohId === p.id;
           let badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-500/15 text-sec">Idle</span>';
-          if (p.status === 'testing') {
-            badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/15 text-cyan-400">Testando...</span>';
-          } else if (p.status === 'online') {
-            badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 tabular-nums">${p.latency} ms</span>`;
-          } else if (p.status === 'offline') {
-            badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/15 text-rose-400">Falha</span>';
-          }
+          if (p.status === 'testing') badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/15 text-cyan-400">Testando...</span>';
+          else if (p.status === 'online') badge = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 tabular-nums">${p.latency} ms</span>`;
+          else if (p.status === 'offline') badge = '<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/15 text-rose-400">Falha</span>';
 
           return `
-            <div class="flex items-center justify-between gap-2.5 p-3 rounded-2xl border transition-all ${
-              isSelected ? 'bg-indigo-500/15 border-indigo-400/55' : 'channel-card'
-            }">
+            <div class="flex items-center justify-between gap-2.5 p-3 rounded-2xl border transition-all ${isSelected ? 'bg-indigo-500/15 border-indigo-400/55' : 'channel-card'}">
               <button type="button" data-select-doh="${escapeHtml(p.id)}" class="flex-1 text-left flex items-center gap-3 min-w-0">
-                <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                  isSelected ? 'border-cyan-400' : 'border-slate-500'
-                }">
+                <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-cyan-400' : 'border-slate-500'}">
                   ${isSelected ? '<div class="w-2 h-2 rounded-full bg-cyan-400"></div>' : ''}
                 </div>
                 <div class="min-w-0">
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <span class="text-xs font-bold truncate">${escapeHtml(p.name)}</span>
-                    ${p.dnssec ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-400/25">DNSSEC</span>' : ''}
-                    ${p.custom ? '<span class="px-1.5 py-0.2 rounded text-[9px] font-semibold bg-cyan-500/15 text-cyan-400">Custom</span>' : ''}
+                    ${p.dnssec ? '<span class="px-1.5 rounded text-[9px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-400/25">DNSSEC</span>' : ''}
+                    ${p.custom ? '<span class="px-1.5 rounded text-[9px] font-semibold bg-cyan-500/15 text-cyan-400">Custom</span>' : ''}
                   </div>
                   <p class="text-[10px] font-mono text-sec truncate">${escapeHtml(p.resolvedIp ? `IP: ${p.resolvedIp} • ` : '')}${escapeHtml(p.template)}</p>
                 </div>
               </button>
               <div class="flex items-center gap-1.5 flex-shrink-0">
                 ${badge}
-                ${p.custom ? `
-                  <button type="button" data-remove-doh="${escapeHtml(p.id)}" class="w-7 h-7 rounded-full hover:bg-rose-500/20 text-sec hover:text-rose-400 flex items-center justify-center" title="Remover servidor">
-                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                  </button>
-                ` : ''}
+                ${p.custom ? `<button type="button" data-remove-doh="${escapeHtml(p.id)}" class="w-7 h-7 rounded-full hover:bg-rose-500/20 text-sec hover:text-rose-400 flex items-center justify-center" title="Remover servidor" aria-label="Remover servidor">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>` : ''}
               </div>
-            </div>
-          `;
+            </div>`;
         }).join('');
       }
 
@@ -1962,31 +1498,23 @@
       }
 
       /* ======================================================================
-         CARREGAMENTO DIRETO DE PLAYLISTS + FAILOVER CDN (ZERO PROXY CORS)
+         CARREGAMENTO DE PLAYLISTS (CDN FAILOVER)
          ====================================================================== */
       async function fetchOfficialPlaylistWithCdnFailover(fileName) {
         let lastErr = null;
-
         for (const mirror of CDN_MIRRORS) {
           const url = mirror.buildUrl(fileName);
-
-          // Pre-flight DNS via DoH ativo sobre o host do espelho CDN
           try {
             const dnsRes = await resolveDns(mirror.host, 'A');
-            if (dnsRes.statusCode === 3) {
-              throw new Error(`DNS NXDOMAIN para ${mirror.host}`);
-            }
+            if (dnsRes.statusCode === 3) throw new Error(`DNS NXDOMAIN para ${mirror.host}`);
           } catch (dnsErr) {
-            // Não impede tentativa caso apenas o DoH esteja momentaneamente indisponível
             console.warn(`Aviso Pre-flight DNS (${mirror.host}):`, dnsErr);
           }
 
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 11000);
-
+          const timer = setTimeout(() => controller.abort(), 15000);
           try {
             const resp = await fetch(url, { method: 'GET', signal: controller.signal });
-            clearTimeout(timer);
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const text = await resp.text();
             if (!text || (!text.includes('#EXTM3U') && !text.includes('#EXTINF'))) {
@@ -1994,16 +1522,16 @@
             }
             return { text, mirror, url };
           } catch (err) {
-            clearTimeout(timer);
             lastErr = err;
+          } finally {
+            clearTimeout(timer);
           }
         }
-
         throw lastErr || new Error('Todos os espelhos CDN falharam.');
       }
 
       /* ======================================================================
-         PARSER M3U / M3U8 OTIMIZADO PARA LISTAS GRANDES
+         PARSER M3U / M3U8
          ====================================================================== */
       function parseM3U8(rawText) {
         const lines = rawText.split(/\r?\n/);
@@ -2019,114 +1547,98 @@
             const attrs = {};
             let m;
             attrRegex.lastIndex = 0;
-            while ((m = attrRegex.exec(line)) !== null) {
-              attrs[m[1].toLowerCase()] = m[2].trim();
-            }
-            const commaIdx = line.lastIndexOf(',');
+            while ((m = attrRegex.exec(line)) !== null) attrs[m[1].toLowerCase()] = m[2].trim();
+            // Nome após a última vírgula FORA de aspas
+            const lastQuote = line.lastIndexOf('"');
+            const commaIdx = line.indexOf(',', lastQuote === -1 ? 0 : lastQuote);
             const displayName = commaIdx !== -1 ? line.slice(commaIdx + 1).trim() : '';
-
             pending = {
               name: displayName || attrs['tvg-name'] || 'Canal sem nome',
               tvgName: attrs['tvg-name'] || '',
-              logo: attrs['tvg-logo'] || '',
+              logo: safeImageUrl(attrs['tvg-logo']),
               group: attrs['group-title'] || 'Geral',
             };
           } else if (line.startsWith('#EXTGRP:') && pending) {
             const grp = line.slice(8).trim();
             if (grp && pending.group === 'Geral') pending.group = grp;
           } else if (!line.startsWith('#') && /^https?:\/\//i.test(line)) {
-            const meta = pending || {
-              name: `Stream #${channels.length + 1}`,
-              tvgName: '',
-              logo: '',
-              group: 'Geral',
-            };
+            const meta = pending || { name: `Stream #${channels.length + 1}`, tvgName: '', logo: '', group: 'Geral' };
             const host = extractHostname(line);
-            const directIp = isIpAddress(host);
-
-            if (directIp && !state.hostHealthMap.has(host)) {
+            if (host && isIpAddress(host) && !state.hostHealthMap.has(host)) {
               state.hostHealthMap.set(host, { ok: true, status: 'IP Direto', ip: host, isDirectIp: true });
             }
-
             channels.push({
               id: `${channels.length}_${line}`,
-              name: meta.name,
-              tvgName: meta.tvgName,
-              logo: meta.logo,
-              group: meta.group || 'Geral',
-              url: line,
-              host,
+              name: meta.name, tvgName: meta.tvgName, logo: meta.logo, group: meta.group || 'Geral',
+              url: line, host,
               searchKey: `${meta.name} ${meta.tvgName} ${meta.group} ${host}`.toLowerCase(),
             });
             pending = null;
           }
         }
-
         return channels;
       }
 
       /* ======================================================================
-         RENDERIZAÇÃO DE PLAYLISTS, CATEGORIAS E CANAIS (PAGINAÇÃO PROGRESSIVA)
+         RENDERIZAÇÃO DO CATÁLOGO
          ====================================================================== */
       function renderPlaylistPills() {
         dom.playlistPills.innerHTML = OFFICIAL_PLAYLISTS.map(pl => {
           const active = state.currentPlaylist && state.currentPlaylist.id === pl.id;
+          const icon = pl.id === 'filmes-series'
+            ? '<rect x="2" y="2" width="20" height="20" rx="2.2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>'
+            : '<rect x="2.5" y="6.5" width="19" height="13.5" rx="2.5"/><path d="M16.5 2.5L12 6.5 7.5 2.5"/>';
           return `
-            <button
-              type="button"
-              data-playlist-id="${escapeHtml(pl.id)}"
-              class="m3-pill flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 ${active ? 'active' : ''}"
-            >
-              <svg class="w-3.5 h-3.5 opacity-85" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                ${
-                  pl.id === 'filmes-series'
-                    ? '<rect x="2" y="2" width="20" height="20" rx="2.2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/>'
-                    : '<rect x="2.5" y="6.5" width="19" height="13.5" rx="2.5"/><path d="M16.5 2.5L12 6.5 7.5 2.5"/>'
-                }
-              </svg>
+            <button type="button" data-playlist-id="${escapeHtml(pl.id)}" class="m3-pill flex-shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-1.5 ${active ? 'active' : ''}">
+              <svg class="w-3.5 h-3.5 opacity-85" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon}</svg>
               <span>${escapeHtml(pl.name)}</span>
-            </button>
-          `;
+            </button>`;
         }).join('');
       }
 
-      async function loadOfficialPlaylist(playlistObj) {
-        stopBatchAuditIfRunning();
-        state.currentPlaylist = playlistObj;
+      function resetCatalogUi() {
         state.activeCategory = 'Todas';
         state.searchQuery = '';
         dom.searchInput.value = '';
         dom.clearSearchBtn.classList.add('hidden');
-        dom.currentPlaylistName.textContent = playlistObj.name;
-        dom.channelCounter.textContent = 'Buscando via CDN direta...';
-        dom.cdnOriginStatus.textContent = `Resolvendo e baixando ${playlistObj.file}...`;
-
-        renderPlaylistPills();
         dom.channelList.innerHTML = '';
         dom.categoryChips.innerHTML = '';
         dom.listEmptyState.classList.add('hidden');
         dom.loadMoreContainer.classList.add('hidden');
         dom.listLoadingState.classList.remove('hidden');
+      }
+
+      async function loadOfficialPlaylist(playlistObj) {
+        stopBatchAuditIfRunning();
+        const seq = ++state.playlistLoadSeq;
+        state.currentPlaylist = playlistObj;
+        dom.currentPlaylistName.textContent = playlistObj.name;
+        dom.channelCounter.textContent = 'Buscando via CDN direta...';
+        dom.cdnOriginStatus.textContent = `Resolvendo e baixando ${playlistObj.file}...`;
+        renderPlaylistPills();
+        resetCatalogUi();
 
         try {
           const { text, mirror } = await fetchOfficialPlaylistWithCdnFailover(playlistObj.file);
+          if (seq !== state.playlistLoadSeq) return;
           const parsed = parseM3U8(text);
           state.allChannels = parsed;
-
           dom.listLoadingState.classList.add('hidden');
           dom.cdnOriginStatus.textContent = `Origem direta: ${mirror.label} • ${playlistObj.file}`;
           buildCategoryChips();
           applyFiltersAndRender();
           showToast(`${parsed.length.toLocaleString('pt-BR')} itens carregados (${mirror.label})`, 'success');
         } catch (err) {
+          if (seq !== state.playlistLoadSeq) return;
           console.error('Erro ao carregar playlist:', err);
           state.allChannels = [];
+          state.filteredChannels = [];
           dom.listLoadingState.classList.add('hidden');
           dom.channelCounter.textContent = 'Erro ao carregar lista';
           dom.cdnOriginStatus.textContent = 'Falha nos espelhos CDN diretos';
           dom.listEmptyState.classList.remove('hidden');
           dom.emptyStateTitle.textContent = 'Não foi possível carregar esta lista';
-          dom.emptyStateDesc.textContent = 'Verifique sua conexão à internet ou tente recarregar.';
+          dom.emptyStateDesc.textContent = `Verifique sua conexão e se o arquivo "${playlistObj.file}" existe no repositório. Você também pode importar uma lista manualmente.`;
           dom.retryPlaylistBtn.classList.remove('hidden');
           showToast('Falha ao baixar lista nos espelhos CDN.', 'error');
         }
@@ -2134,33 +1646,25 @@
 
       async function loadExternalUrlPlaylist(url) {
         stopBatchAuditIfRunning();
+        const seq = ++state.playlistLoadSeq;
         const host = extractHostname(url);
         state.currentPlaylist = { id: 'custom-url', name: host || 'Lista Externa', file: '', url };
-        state.activeCategory = 'Todas';
-        state.searchQuery = '';
-        dom.searchInput.value = '';
         dom.currentPlaylistName.textContent = state.currentPlaylist.name;
         dom.channelCounter.textContent = 'Validando DNS e baixando...';
         renderPlaylistPills();
-
-        dom.channelList.innerHTML = '';
-        dom.categoryChips.innerHTML = '';
-        dom.listEmptyState.classList.add('hidden');
-        dom.loadMoreContainer.classList.add('hidden');
-        dom.listLoadingState.classList.remove('hidden');
+        resetCatalogUi();
 
         try {
           if (host && !isIpAddress(host)) {
             const dnsRes = await resolveDns(host, 'A');
-            if (dnsRes.statusCode === 3) {
-              throw new Error(`O domínio "${host}" não existe (DNS NXDOMAIN).`);
-            }
+            if (dnsRes.statusCode === 3) throw new Error(`O domínio "${host}" não existe (DNS NXDOMAIN).`);
           }
           const resp = await fetch(url);
           if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
           const text = await resp.text();
           const parsed = parseM3U8(text);
           if (!parsed.length) throw new Error('Nenhum stream válido encontrado nesta URL.');
+          if (seq !== state.playlistLoadSeq) return;
 
           state.allChannels = parsed;
           dom.listLoadingState.classList.add('hidden');
@@ -2169,10 +1673,16 @@
           applyFiltersAndRender();
           showToast(`${parsed.length.toLocaleString('pt-BR')} itens importados com sucesso!`, 'success');
         } catch (err) {
+          if (seq !== state.playlistLoadSeq) return;
+          state.allChannels = [];
+          state.filteredChannels = [];
           dom.listLoadingState.classList.add('hidden');
+          dom.channelCounter.textContent = 'Erro ao importar';
           dom.listEmptyState.classList.remove('hidden');
           dom.emptyStateTitle.textContent = 'Falha ao importar URL externa';
-          dom.emptyStateDesc.textContent = err.message || 'O servidor remoto pode não permitir CORS no navegador. Baixe o arquivo .m3u8 e importe localmente.';
+          dom.emptyStateDesc.textContent = (err.message && !/Failed to fetch/i.test(err.message))
+            ? err.message
+            : 'O servidor remoto pode não permitir CORS no navegador. Baixe o arquivo .m3u8 e importe localmente.';
           dom.retryPlaylistBtn.classList.add('hidden');
           showToast('Erro ao importar lista externa (CORS ou DNS).', 'error');
         }
@@ -2180,12 +1690,11 @@
 
       function loadLocalPlaylistText(name, rawText) {
         stopBatchAuditIfRunning();
+        state.playlistLoadSeq++;
         state.currentPlaylist = { id: 'custom-local', name, file: '' };
-        state.activeCategory = 'Todas';
-        state.searchQuery = '';
-        dom.searchInput.value = '';
         dom.currentPlaylistName.textContent = name;
         renderPlaylistPills();
+        resetCatalogUi();
 
         const parsed = parseM3U8(rawText);
         state.allChannels = parsed;
@@ -2193,7 +1702,8 @@
         dom.cdnOriginStatus.textContent = `Arquivo local: ${name}`;
         buildCategoryChips();
         applyFiltersAndRender();
-        showToast(`${parsed.length.toLocaleString('pt-BR')} itens carregados do arquivo local!`, 'success');
+        if (parsed.length) showToast(`${parsed.length.toLocaleString('pt-BR')} itens carregados do arquivo local!`, 'success');
+        else showToast('Nenhum stream válido encontrado no arquivo.', 'warning');
       }
 
       function buildCategoryChips() {
@@ -2202,27 +1712,13 @@
           const grp = ch.group || 'Geral';
           counts.set(grp, (counts.get(grp) || 0) + 1);
         }
-
-        const topGroups = Array.from(counts.entries())
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 60);
-
-        const chips = [
-          { name: 'Todas', count: state.allChannels.length },
-          ...topGroups.map(([name, count]) => ({ name, count })),
-        ];
+        const topGroups = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 60);
+        const chips = [{ name: 'Todas', count: state.allChannels.length }, ...topGroups.map(([name, count]) => ({ name, count }))];
 
         dom.categoryChips.innerHTML = chips.map(cat => {
           const active = state.activeCategory === cat.name;
-          return `
-            <button
-              type="button"
-              data-category="${escapeHtml(cat.name)}"
-              class="m3-pill flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold ${active ? 'active' : ''}"
-            >
-              ${escapeHtml(cat.name)} <span class="opacity-70 font-mono text-[10px] ml-0.5">${cat.count}</span>
-            </button>
-          `;
+          return `<button type="button" data-category="${escapeHtml(cat.name)}" class="m3-pill flex-shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold ${active ? 'active' : ''}">
+            ${escapeHtml(cat.name)} <span class="opacity-70 font-mono text-[10px] ml-0.5">${cat.count}</span></button>`;
         }).join('');
       }
 
@@ -2233,21 +1729,15 @@
       function applyFiltersAndRender() {
         updateFavBadge();
         const q = state.searchQuery.trim().toLowerCase();
-        const source = state.activeTab === 'favorites'
-          ? Object.values(state.favorites)
-          : state.allChannels;
+        const source = state.activeTab === 'favorites' ? Object.values(state.favorites) : state.allChannels;
 
         state.filteredChannels = source.filter(ch => {
-          if (state.activeTab === 'all' && state.activeCategory !== 'Todas' && ch.group !== state.activeCategory) {
-            return false;
-          }
+          if (state.activeTab === 'all' && state.activeCategory !== 'Todas' && ch.group !== state.activeCategory) return false;
           if (state.onlyActiveDns) {
             const h = state.hostHealthMap.get(ch.host || extractHostname(ch.url));
             if (!h || !h.ok) return false;
           }
-          if (q && !(ch.searchKey || `${ch.name} ${ch.group}`.toLowerCase()).includes(q)) {
-            return false;
-          }
+          if (q && !(ch.searchKey || `${ch.name} ${ch.group}`.toLowerCase()).includes(q)) return false;
           return true;
         });
 
@@ -2262,7 +1752,6 @@
           dom.loadMoreContainer.classList.add('hidden');
           dom.listEmptyState.classList.remove('hidden');
           dom.retryPlaylistBtn.classList.add('hidden');
-
           if (state.onlyActiveDns) {
             dom.emptyStateTitle.textContent = 'Nenhum canal com DNS validado ainda';
             dom.emptyStateDesc.textContent = 'Clique em "Auditar DNS" acima para validar todos os domínios desta lista em lote.';
@@ -2282,15 +1771,15 @@
 
       function getHostStatusDotHtml(host) {
         const info = state.hostHealthMap.get(host);
-        if (!info) {
-          return '<span class="w-2 h-2 rounded-full bg-slate-500/45 flex-shrink-0" title="DNS não auditado ainda"></span>';
-        }
+        if (!info) return '<span class="w-2 h-2 rounded-full bg-slate-500/45 flex-shrink-0" title="DNS não auditado ainda"></span>';
         if (info.ok) {
           const label = info.isDirectIp ? 'IP Direto Ativo' : `DNS Ativo (${info.ip || info.status})`;
           return `<span class="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.85)] flex-shrink-0" title="${escapeHtml(label)}"></span>`;
         }
         return `<span class="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_6px_rgba(244,63,94,0.8)] flex-shrink-0" title="Domínio Offline (${escapeHtml(info.status)})"></span>`;
       }
+
+      const FALLBACK_LOGO_SVG = `<svg class="w-5 h-5 text-sec" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6.5" width="19" height="13.5" rx="2.5"/><path d="M16.5 2.5L12 6.5 7.5 2.5"/></svg>`;
 
       function renderNextBatch() {
         const start = state.renderedCount;
@@ -2301,13 +1790,6 @@
         }
 
         const fragment = document.createDocumentFragment();
-        const fallbackSvg = `
-          <svg class="w-5 h-5 text-sec" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <rect x="2.5" y="6.5" width="19" height="13.5" rx="2.5"/>
-            <path d="M16.5 2.5L12 6.5 7.5 2.5"/>
-          </svg>
-        `;
-
         for (let i = start; i < end; i++) {
           const ch = state.filteredChannels[i];
           const host = ch.host || extractHostname(ch.url);
@@ -2317,16 +1799,13 @@
           const row = document.createElement('div');
           row.className = `channel-card rounded-2xl p-2.5 flex items-center gap-3 cursor-pointer ${isPlaying ? 'playing' : ''}`;
           row.dataset.channelIndex = String(i);
-          row.dataset.host = host;
 
           const logoHtml = ch.logo
-            ? `<img src="${escapeHtml(ch.logo)}" alt="" loading="lazy" class="w-full h-full object-contain p-1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" /><div style="display:none" class="w-full h-full items-center justify-center">${fallbackSvg}</div>`
-            : `<div class="w-full h-full flex items-center justify-center">${fallbackSvg}</div>`;
+            ? `<img src="${escapeHtml(ch.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-contain p-1" data-logo-img /><div style="display:none" class="w-full h-full items-center justify-center">${FALLBACK_LOGO_SVG}</div>`
+            : `<div class="w-full h-full flex items-center justify-center">${FALLBACK_LOGO_SVG}</div>`;
 
           row.innerHTML = `
-            <div class="w-11 h-11 rounded-xl bg-slate-900/10 dark:bg-black/40 border themed-divider overflow-hidden flex-shrink-0 flex items-center justify-center">
-              ${logoHtml}
-            </div>
+            <div class="w-11 h-11 rounded-xl bg-slate-900/10 dark:bg-black/40 border themed-divider overflow-hidden flex-shrink-0 flex items-center justify-center">${logoHtml}</div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-1.5">
                 <span data-dns-dot="${escapeHtml(host)}" class="inline-flex items-center">${getHostStatusDotHtml(host)}</span>
@@ -2335,21 +1814,21 @@
               </div>
               <p class="text-[11px] text-sec truncate mt-0.5">${escapeHtml(ch.group || 'Geral')} <span class="opacity-60 font-mono text-[10px]">• ${escapeHtml(host || 'stream')}</span></p>
             </div>
-            <button
-              type="button"
-              data-fav-url="${escapeHtml(ch.url)}"
-              data-fav-idx="${i}"
-              class="m3-btn w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                isFav ? 'text-rose-400 bg-rose-500/15' : 'text-ter hover:text-indigo-400 hover:bg-slate-500/10'
-              }"
-              title="${isFav ? 'Remover dos favoritos' : 'Salvar nos favoritos'}"
-            >
+            <button type="button" data-fav-url="${escapeHtml(ch.url)}" data-fav-idx="${i}"
+              class="m3-btn w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${isFav ? 'text-rose-400 bg-rose-500/15' : 'text-ter hover:text-indigo-400 hover:bg-slate-500/10'}"
+              title="${isFav ? 'Remover dos favoritos' : 'Salvar nos favoritos'}" aria-label="Favoritar">
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="${isFav ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
               </svg>
-            </button>
-          `;
+            </button>`;
 
+          const img = row.querySelector('img[data-logo-img]');
+          if (img) {
+            img.addEventListener('error', () => {
+              img.style.display = 'none';
+              if (img.nextElementSibling) img.nextElementSibling.style.display = 'flex';
+            }, { once: true });
+          }
           fragment.appendChild(row);
         }
 
@@ -2365,20 +1844,17 @@
         }
       }
 
-      // Atualiza apenas os pontinhos de status DNS nos cards já renderizados (sem refazer o DOM)
       function refreshRenderedHostDots(host) {
-        const dots = dom.channelList.querySelectorAll(`[data-dns-dot="${CSS.escape(host)}"]`);
+        if (!host) return;
         const html = getHostStatusDotHtml(host);
-        dots.forEach(el => { el.innerHTML = html; });
+        dom.channelList.querySelectorAll(`[data-dns-dot="${CSS.escape(host)}"]`).forEach(el => { el.innerHTML = html; });
       }
 
       /* ======================================================================
-         AUDITORIA DNS EM LOTE (CONCORRÊNCIA DE 6, AGRUPADA POR HOSTNAME ÚNICO)
+         AUDITORIA DNS EM LOTE
          ====================================================================== */
       function stopBatchAuditIfRunning() {
-        if (state.batchAuditing) {
-          state.batchAbortFlag = true;
-        }
+        if (state.batchAuditing) state.batchAbortFlag = true;
       }
 
       async function runBatchDnsAudit() {
@@ -2388,16 +1864,12 @@
           return;
         }
 
-        const source = state.activeTab === 'favorites'
-          ? Object.values(state.favorites)
-          : state.allChannels;
-
+        const source = state.activeTab === 'favorites' ? Object.values(state.favorites) : state.allChannels;
         if (!source.length) {
           showToast('Carregue uma lista de canais antes de auditar.', 'warning');
           return;
         }
 
-        // Agrupa hostnames únicos para auditoria ultrarrápida
         const uniqueHosts = Array.from(new Set(source.map(ch => ch.host || extractHostname(ch.url)).filter(Boolean)));
         if (!uniqueHosts.length) return;
 
@@ -2407,27 +1879,22 @@
         dom.batchAuditIcon.classList.add('animate-spin-slow');
         dom.batchAuditProgressBox.classList.remove('hidden');
 
-        let completed = 0;
-        let onlineHosts = 0;
-        let offlineHosts = 0;
-        let cursor = 0;
+        let completed = 0, onlineHosts = 0, offlineHosts = 0, cursor = 0;
         const total = uniqueHosts.length;
 
-        const updateAuditProgress = () => {
-          const pct = Math.round((completed / total) * 100);
-          dom.batchAuditBar.style.width = `${pct}%`;
+        const updateProgress = () => {
+          dom.batchAuditBar.style.width = `${Math.round((completed / total) * 100)}%`;
           dom.batchAuditStats.textContent = `${completed}/${total} domínios`;
           dom.batchAuditText.textContent = `Ativos: ${onlineHosts} • Offline: ${offlineHosts}`;
         };
-        updateAuditProgress();
+        updateProgress();
 
-        // Pool com concorrência controlada de 6 workers simultâneos
         async function worker() {
           while (!state.batchAbortFlag) {
             const idx = cursor++;
             if (idx >= total) break;
-
             const host = uniqueHosts[idx];
+
             if (isIpAddress(host)) {
               state.hostHealthMap.set(host, { ok: true, status: 'IP Direto', ip: host, isDirectIp: true });
               onlineHosts++;
@@ -2437,37 +1904,33 @@
                 const ip = res.answers.find(a => a.type === DNS_TYPE_NUM.A || a.type === DNS_TYPE_NUM.CNAME)?.data || '';
                 const ok = res.statusCode === 0 && res.answers.length > 0;
                 state.hostHealthMap.set(host, { ok, status: res.statusText, ip, isDirectIp: false });
-                if (ok) onlineHosts++;
-                else offlineHosts++;
+                if (ok) onlineHosts++; else offlineHosts++;
               } catch {
                 state.hostHealthMap.set(host, { ok: false, status: 'ERRO', ip: '', isDirectIp: false });
                 offlineHosts++;
               }
             }
-
             completed++;
             refreshRenderedHostDots(host);
-            updateAuditProgress();
+            updateProgress();
           }
         }
 
-        const workers = Array.from({ length: Math.min(BATCH_CONCURRENCY, total) }, () => worker());
-        await Promise.all(workers);
+        await Promise.all(Array.from({ length: Math.min(BATCH_CONCURRENCY, total) }, () => worker()));
 
+        const aborted = state.batchAbortFlag;
         state.batchAuditing = false;
+        state.batchAbortFlag = false;
         dom.batchAuditLabel.textContent = 'Auditar DNS';
         dom.batchAuditIcon.classList.remove('animate-spin-slow');
 
-        if (state.batchAbortFlag) {
+        if (aborted) {
           dom.batchAuditText.textContent = `Auditoria pausada (${onlineHosts} ativos, ${offlineHosts} offline)`;
         } else {
-          dom.batchAuditText.textContent = `Concluída: ${onlineHosts} domínios ativos • ${offlineHosts} offline`;
+          dom.batchAuditText.textContent = `Concluída: ${onlineHosts} ativos • ${offlineHosts} offline`;
           showToast(`Auditoria DNS concluída: ${onlineHosts} ativos, ${offlineHosts} offline`, 'success');
         }
-
-        if (state.onlyActiveDns) {
-          applyFiltersAndRender();
-        }
+        if (state.onlyActiveDns) applyFiltersAndRender();
       }
 
       /* ======================================================================
@@ -2480,18 +1943,12 @@
           showToast(`"${channel.name}" removido dos favoritos`, 'info');
         } else {
           state.favorites[channel.url] = {
-            id: channel.id,
-            name: channel.name,
-            tvgName: channel.tvgName || '',
-            logo: channel.logo || '',
-            group: channel.group || 'Geral',
-            url: channel.url,
-            host: channel.host || extractHostname(channel.url),
-            searchKey: `${channel.name} ${channel.group}`.toLowerCase(),
+            id: channel.id, name: channel.name, tvgName: channel.tvgName || '', logo: channel.logo || '',
+            group: channel.group || 'Geral', url: channel.url, host: channel.host || extractHostname(channel.url),
+            searchKey: `${channel.name} ${channel.tvgName || ''} ${channel.group} ${channel.host || ''}`.toLowerCase(),
           };
           showToast(`"${channel.name}" salvo nos favoritos`, 'success');
         }
-
         saveJsonStorage(STORAGE_KEYS.FAVORITES, state.favorites);
         updateFavBadge();
         updatePlayerFavIcon();
@@ -2499,96 +1956,87 @@
         if (state.activeTab === 'favorites') {
           applyFiltersAndRender();
         } else {
+          const isFav = Boolean(state.favorites[channel.url]);
           dom.channelList.querySelectorAll('button[data-fav-url]').forEach(btn => {
-            if (btn.dataset.favUrl === channel.url) {
-              const isFav = Boolean(state.favorites[channel.url]);
-              btn.className = `m3-btn w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                isFav ? 'text-rose-400 bg-rose-500/15' : 'text-ter hover:text-indigo-400 hover:bg-slate-500/10'
-              }`;
-              const svg = btn.querySelector('svg');
-              if (svg) svg.setAttribute('fill', isFav ? 'currentColor' : 'none');
-            }
+            if (btn.dataset.favUrl !== channel.url) return;
+            btn.className = `m3-btn w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${isFav ? 'text-rose-400 bg-rose-500/15' : 'text-ter hover:text-indigo-400 hover:bg-slate-500/10'}`;
+            const svg = btn.querySelector('svg');
+            if (svg) svg.setAttribute('fill', isFav ? 'currentColor' : 'none');
           });
         }
       }
 
       /* ======================================================================
-         PLAYER HLS.JS + PRE-FLIGHT DNS POR CANAL + DIAGNÓSTICO DE ERROS
+         PLAYER
          ====================================================================== */
       function destroyCurrentHls() {
         if (state.hlsInstance) {
           try { state.hlsInstance.destroy(); } catch {}
           state.hlsInstance = null;
         }
+        state.suppressVideoError = true;
         dom.video.pause();
         dom.video.removeAttribute('src');
         dom.video.load();
+        setTimeout(() => { state.suppressVideoError = false; }, 0);
       }
 
       function setStreamStatus(mode, text = '') {
         const b = dom.streamStatusBadge;
+        const base = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] backdrop-blur-md border ';
         if (mode === 'live') {
-          b.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 backdrop-blur-md border border-emerald-400/40 text-emerald-200';
+          b.className = base + 'font-bold bg-emerald-500/20 border-emerald-400/40 text-emerald-200';
           b.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 live-dot"></span>AO VIVO';
         } else if (mode === 'buffering') {
-          b.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-cyan-500/20 backdrop-blur-md border border-cyan-400/35 text-cyan-200';
+          b.className = base + 'font-semibold bg-cyan-500/20 border-cyan-400/35 text-cyan-200';
           b.innerHTML = '<svg class="w-3 h-3 animate-spin-slow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke-linecap="round"/></svg>CARREGANDO';
         } else if (mode === 'error') {
-          b.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/20 backdrop-blur-md border border-rose-400/40 text-rose-200';
+          b.className = base + 'font-bold bg-rose-500/20 border-rose-400/40 text-rose-200';
           b.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>INDISPONÍVEL';
         } else {
-          b.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-white/10 backdrop-blur-md border border-white/15 text-slate-200';
+          b.className = base + 'font-semibold bg-white/10 border-white/15 text-slate-200';
           b.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>${escapeHtml(text || 'AGUARDANDO')}`;
         }
       }
 
       function updatePlayerFavIcon() {
-        const isFav = state.currentChannel && Boolean(state.favorites[state.currentChannel.url]);
+        const isFav = Boolean(state.currentChannel && state.favorites[state.currentChannel.url]);
         dom.ctrlFavIcon.setAttribute('fill', isFav ? 'currentColor' : 'none');
         dom.ctrlFavBtn.classList.toggle('text-rose-400', isFav);
         dom.ctrlFavBtn.classList.toggle('text-slate-200', !isFav);
       }
 
-      function updateLiveDnsTelemetryBar(dnsInfo) {
-        if (!dnsInfo) return;
+      function updateLiveDnsTelemetryBar(d) {
+        if (!d) return;
+        dom.telHostname.textContent = d.host || '—';
+        dom.telHostname.title = d.host || '';
 
-        dom.telHostname.textContent = dnsInfo.host || '—';
-        dom.telHostname.title = dnsInfo.host || '';
-
-        const ipDisplay = dnsInfo.ipv4.length
-          ? `${dnsInfo.ipv4[0]}${dnsInfo.ipv6.length ? ` (+IPv6)` : ''}`
-          : dnsInfo.ipv6.length
-            ? dnsInfo.ipv6[0]
-            : dnsInfo.ok ? 'Resolvido' : 'Sem IP';
+        const ipDisplay = d.ipv4.length
+          ? `${d.ipv4[0]}${d.ipv6.length ? ' (+IPv6)' : ''}`
+          : d.ipv6.length ? d.ipv6[0] : d.ok ? 'Resolvido' : 'Sem IP';
         dom.telIp.textContent = ipDisplay;
-        dom.telIp.title = [...dnsInfo.ipv4, ...dnsInfo.ipv6].join(', ') || ipDisplay;
+        dom.telIp.title = [...d.ipv4, ...d.ipv6].join(', ') || ipDisplay;
 
-        const cnamePart = dnsInfo.cname.length ? `${dnsInfo.cname[0]} • ` : '';
-        const ttlPart = dnsInfo.ttl ? `TTL ${dnsInfo.ttl}s` : (dnsInfo.isDirectIp ? 'IP Literal' : '—');
+        const cnamePart = d.cname.length ? `${d.cname[0]} • ` : '';
+        const ttlPart = d.ttl ? `TTL ${d.ttl}s` : (d.isDirectIp ? 'IP Literal' : '—');
         dom.telTtl.textContent = `${cnamePart}${ttlPart}`;
         dom.telTtl.title = `${cnamePart}${ttlPart}`;
 
-        dom.telLatency.textContent = dnsInfo.isDirectIp
-          ? '0 ms (Direto)'
-          : dnsInfo.fromCache
-            ? '0 ms (Cache)'
-            : `${dnsInfo.latency} ms`;
+        dom.telLatency.textContent = d.isDirectIp ? '0 ms (Direto)' : d.fromCache ? '0 ms (Cache)' : `${d.latency} ms`;
+        dom.telemetryResolverLine.textContent = `Resolver: ${d.resolverName}${d.fromCache ? ' • Resposta em Cache' : ''}`;
+        dom.telemetryStatusChip.textContent = d.statusText;
 
-        dom.telemetryResolverLine.textContent = `Resolver: ${dnsInfo.resolverName}${dnsInfo.fromCache ? ' • Resposta em Cache' : ''}`;
-
-        // Status chip
-        dom.telemetryStatusChip.textContent = dnsInfo.statusText;
-        if (dnsInfo.ok) {
+        const pillBase = 'hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono backdrop-blur-md border ';
+        if (d.ok) {
           dom.telemetryStatusChip.className = 'px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-500 dark:text-emerald-300 border border-emerald-400/30';
-          dom.streamDnsPill.textContent = dnsInfo.isDirectIp ? 'IP Direto' : `${dnsInfo.statusText} • ${dnsInfo.ipv4[0] || dnsInfo.ipv6[0] || 'OK'}`;
-          dom.streamDnsPill.className = 'hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono bg-emerald-500/20 backdrop-blur-md border border-emerald-400/35 text-emerald-200';
+          dom.streamDnsPill.textContent = d.isDirectIp ? 'IP Direto' : `${d.statusText} • ${d.ipv4[0] || d.ipv6[0] || 'OK'}`;
+          dom.streamDnsPill.className = pillBase + 'bg-emerald-500/20 border-emerald-400/35 text-emerald-200';
         } else {
           dom.telemetryStatusChip.className = 'px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-rose-500/15 text-rose-400 border border-rose-400/30';
-          dom.streamDnsPill.textContent = `DNS ${dnsInfo.statusText}`;
-          dom.streamDnsPill.className = 'hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-mono bg-rose-500/20 backdrop-blur-md border border-rose-400/35 text-rose-200';
+          dom.streamDnsPill.textContent = `DNS ${d.statusText}`;
+          dom.streamDnsPill.className = pillBase + 'bg-rose-500/20 border-rose-400/35 text-rose-200';
         }
-
-        dom.telemetryDnssecChip.classList.toggle('hidden', !dnsInfo.dnssec);
+        dom.telemetryDnssecChip.classList.toggle('hidden', !d.dnssec);
       }
 
       function showDiagnosticError(kind, title, detail) {
@@ -2604,15 +2052,13 @@
           media: { text: 'ERRO DE REDE / DECODIFICAÇÃO', cls: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/35' },
         };
         const style = tagStyles[kind] || tagStyles.media;
-
         dom.errorCategoryTag.textContent = style.text;
         dom.errorCategoryTag.className = `px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border mb-1.5 ${style.cls}`;
         dom.errorTitle.textContent = title;
         dom.errorDetail.textContent = detail;
         dom.errorExternalLink.href = state.currentChannel ? state.currentChannel.url : '#';
 
-        // Exibe o botão "Tentar HTTPS" quando houver bloqueio Mixed Content em streams http://
-        const canTryHttps = kind === 'mixed' || Boolean(state.currentChannel && /^http:\/\//i.test(state.currentChannel.url));
+        const canTryHttps = Boolean(state.currentChannel && /^http:\/\//i.test(state.currentChannel.url));
         dom.errorTryHttpsBtn.classList.toggle('hidden', !canTryHttps);
       }
 
@@ -2634,132 +2080,115 @@
         dom.playerGroup.textContent = channel.group || 'IPTV Brasil 2026';
         dom.playerLoadingText.textContent = 'Executando Pre-flight DNS (A + AAAA + CNAME)...';
         setStreamStatus('buffering');
+        destroyCurrentHls();
 
+        // Logo (sem handlers inline)
+        dom.playerLogoBox.innerHTML = '';
+        const fallbackIcon = '<svg class="w-5 h-5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><path d="M16.5 2.5L12 6.5 7.5 2.5"/></svg>';
         if (channel.logo) {
-          dom.playerLogoBox.innerHTML = `<img src="${escapeHtml(channel.logo)}" alt="" class="w-full h-full object-contain p-1" onerror="this.parentElement.innerHTML='<svg class=&quot;w-5 h-5 text-cyan-300&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;1.8&quot;><rect x=&quot;2.5&quot; y=&quot;6.5&quot; width=&quot;19&quot; height=&quot;13.5&quot; rx=&quot;3&quot;/><path d=&quot;M16.5 2.5L12 6.5 7.5 2.5&quot;/></svg>';" />`;
+          const img = document.createElement('img');
+          img.src = channel.logo;
+          img.alt = '';
+          img.referrerPolicy = 'no-referrer';
+          img.className = 'w-full h-full object-contain p-1';
+          img.addEventListener('error', () => { dom.playerLogoBox.innerHTML = fallbackIcon; }, { once: true });
+          dom.playerLogoBox.appendChild(img);
         } else {
-          dom.playerLogoBox.innerHTML = `<svg class="w-5 h-5 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="6.5" width="19" height="13.5" rx="3"/><path d="M16.5 2.5L12 6.5 7.5 2.5"/></svg>`;
+          dom.playerLogoBox.innerHTML = fallbackIcon;
         }
 
         if (window.innerWidth < 1024) {
           dom.playerWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        // 1. Pre-flight DNS via DoH
         const dnsInfo = await preflightChannelDns(channel.url);
-        if (playSeq !== state.streamPlaybackSeq) return; // Usuário trocou de canal durante pre-flight
+        if (playSeq !== state.streamPlaybackSeq) return;
 
         state.currentChannelDns = dnsInfo;
         updateLiveDnsTelemetryBar(dnsInfo);
-        if (dnsInfo.host) refreshRenderedHostDots(dnsInfo.host);
+        refreshRenderedHostDots(dnsInfo.host);
 
-        // Se o domínio não existe ou falhou no DNS (NXDOMAIN / SERVFAIL)
         if (!dnsInfo.isDirectIp && (dnsInfo.statusCode === 3 || dnsInfo.statusCode === 2)) {
           showDiagnosticError(
-            'dns',
-            `Domínio offline via DNS (${dnsInfo.statusText})`,
+            'dns', `Domínio offline via DNS (${dnsInfo.statusText})`,
             `O servidor DoH (${dnsInfo.resolverName}) retornou ${dnsInfo.statusText} para "${dnsInfo.host}". Esse domínio expirou ou está fora do ar na origem.`
           );
           return;
         }
 
-        // Verifica Mixed Content (stream http:// em página https://)
         const isMixedContent = window.location.protocol === 'https:' && /^http:\/\//i.test(channel.url);
-
         dom.playerLoadingText.textContent = 'Conectando diretamente ao stream HLS...';
         startDirectPlayback(channel.url, isMixedContent, dnsInfo);
       }
 
       function startDirectPlayback(streamUrl, isMixedContent, dnsInfo) {
         destroyCurrentHls();
-
+        const hostLabel = dnsInfo?.host || extractHostname(streamUrl);
+        const ipLabel = dnsInfo?.ipv4?.[0] || dnsInfo?.ipv6?.[0] || 'ativo';
         const isDirectMedia = /\.(mp4|mkv|webm|mov|ogg)(\?|$)/i.test(streamUrl);
 
         if (isDirectMedia) {
           dom.video.src = streamUrl;
-          dom.video.play().catch(() => {
-            dom.playerLoadingOverlay.classList.add('hidden');
-          });
+          dom.video.play().catch(() => dom.playerLoadingOverlay.classList.add('hidden'));
           return;
         }
 
         if (window.Hls && window.Hls.isSupported()) {
           const hls = new window.Hls({
-            enableWorker: true,
-            lowLatencyMode: true,
-            maxBufferLength: 24,
-            manifestLoadingTimeOut: 10000,
-            levelLoadingTimeOut: 10000,
-            fragLoadingTimeOut: 12000,
+            enableWorker: true, lowLatencyMode: true, maxBufferLength: 24,
+            manifestLoadingTimeOut: 10000, levelLoadingTimeOut: 10000, fragLoadingTimeOut: 12000,
           });
-
           state.hlsInstance = hls;
           hls.loadSource(streamUrl);
           hls.attachMedia(dom.video);
 
           hls.on(window.Hls.Events.MANIFEST_PARSED, () => {
-            dom.video.play().catch(() => {
-              dom.playerLoadingOverlay.classList.add('hidden');
-            });
+            dom.video.play().catch(() => dom.playerLoadingOverlay.classList.add('hidden'));
           });
 
           hls.on(window.Hls.Events.ERROR, (event, data) => {
             if (!data.fatal) return;
 
-            // Retry automático para erros de mídia ou primeira falha de rede
             if (data.type === window.Hls.ErrorTypes.MEDIA_ERROR && state.hlsRetryCount < 2) {
               state.hlsRetryCount++;
               showToast('Recuperando decodificação de mídia...', 'info');
               hls.recoverMediaError();
               return;
             }
-
-            if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR && state.hlsRetryCount < 1) {
+            if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR && state.hlsRetryCount < 1 && !isMixedContent) {
               state.hlsRetryCount++;
               dom.playerLoadingText.textContent = 'Reconectando stream (tentativa automática)...';
               hls.startLoad();
               return;
             }
 
-            // Diagnóstico preciso da causa
             if (isMixedContent) {
-              showDiagnosticError(
-                'mixed',
-                'Bloqueio de Conteúdo Misto (HTTP em HTTPS)',
-                `O DNS de "${dnsInfo.host}" está ativo (${dnsInfo.ipv4[0] || 'OK'}), mas este canal usa protocolo inseguro "http://" e navegadores bloqueiam HTTP dentro de páginas HTTPS. Copie o link abaixo para abrir no VLC ou TiviMate.`
-              );
+              showDiagnosticError('mixed', 'Bloqueio de Conteúdo Misto (HTTP em HTTPS)',
+                `O DNS de "${hostLabel}" está ativo (${ipLabel}), mas este canal usa "http://" e navegadores bloqueiam HTTP dentro de páginas HTTPS. Tente a opção HTTPS ou copie o link para abrir no VLC ou TiviMate.`);
               return;
             }
 
             const httpCode = data.response ? data.response.code : 0;
-            if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR && httpCode === 0) {
-              showDiagnosticError(
-                'cors',
-                'Bloqueio CORS ou Servidor sem Resposta',
-                `O DNS de "${dnsInfo.host}" resolveu corretamente (${dnsInfo.ipv4[0] || dnsInfo.ipv6[0] || 'ativo'}), porém o servidor de origem do canal não envia cabeçalhos CORS (Access-Control-Allow-Origin) ou recusou a conexão no navegador. Use o botão abaixo para copiar o link e reproduzir no VLC/TiviMate.`
-              );
+            if (data.type === window.Hls.ErrorTypes.NETWORK_ERROR && !httpCode) {
+              showDiagnosticError('cors', 'Bloqueio CORS ou Servidor sem Resposta',
+                `O DNS de "${hostLabel}" resolveu corretamente (${ipLabel}), porém o servidor de origem não envia cabeçalhos CORS (Access-Control-Allow-Origin) ou recusou a conexão no navegador. Copie o link para reproduzir no VLC/TiviMate.`);
               return;
             }
 
-            showDiagnosticError(
-              'media',
+            showDiagnosticError('media',
               httpCode ? `Servidor do canal retornou HTTP ${httpCode}` : 'Falha de rede ou decodificação',
-              `Detalhe técnico: ${data.details || 'Erro fatal no stream'}. Você pode tentar recarregar o sinal ou abrir a URL diretamente em um player nativo.`
-            );
+              `Detalhe técnico: ${data.details || 'Erro fatal no stream'}. Você pode tentar recarregar o sinal ou abrir a URL diretamente em um player nativo.`);
           });
           return;
         }
 
-        // Fallback nativo para Safari / iOS
         if (dom.video.canPlayType('application/vnd.apple.mpegurl')) {
           dom.video.src = streamUrl;
-          dom.video.play().catch(() => {
-            dom.playerLoadingOverlay.classList.add('hidden');
-          });
+          dom.video.play().catch(() => dom.playerLoadingOverlay.classList.add('hidden'));
           return;
         }
 
-        showDiagnosticError('media', 'HLS não suportado', 'Seu navegador não suporta reprodução nativa de streams .m3u8.');
+        showDiagnosticError('media', 'HLS não suportado', 'Seu navegador não suporta reprodução de streams .m3u8.');
       }
 
       function highlightPlayingCard(url) {
@@ -2772,7 +2201,7 @@
       }
 
       /* ======================================================================
-         LOOKUP DNS MANUAL (MODAL CENTRAL DNS)
+         LOOKUP MANUAL
          ====================================================================== */
       async function runManualLookup(domainRaw, type) {
         const domain = domainRaw.trim().toLowerCase().replace(/^https?:\/\//, '').split('/')[0].split(':')[0];
@@ -2786,21 +2215,18 @@
 
         try {
           const res = await resolveDns(domain, type, { bypassCache: true });
-          const chips = [];
-          chips.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${res.statusCode === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${escapeHtml(res.statusText)}</span>`);
-          chips.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-indigo-500/20 text-indigo-400 dark:text-cyan-300">${escapeHtml(res.resolverName)} • ${res.latency} ms</span>`);
-          if (res.dnssec) {
-            chips.push('<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400">DNSSEC (AD)</span>');
-          }
+          const chips = [
+            `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${res.statusCode === 0 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${escapeHtml(res.statusText)}</span>`,
+            `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-indigo-500/20 text-indigo-400 dark:text-cyan-300">${escapeHtml(res.resolverName)} • ${res.latency} ms</span>`,
+          ];
+          if (res.dnssec) chips.push('<span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400">DNSSEC (AD)</span>');
           res.answers.forEach(a => {
-            chips.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-500/20">${escapeHtml(a.data)} (TTL ${a.TTL}s)</span>`);
+            chips.push(`<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-500/20">${escapeHtml(a.data)} (TTL ${escapeHtml(a.TTL)}s)</span>`);
           });
-
           dom.lookupRecordsSummary.innerHTML = chips.join('');
           dom.lookupJsonOutput.textContent = JSON.stringify(res.rawJson, null, 2);
         } catch (err) {
           dom.lookupRecordsSummary.innerHTML = `<span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-rose-500/20 text-rose-400">Erro: ${escapeHtml(err.message)}</span>`;
-          dom.lookupJsonOutput.textContent = '';
         } finally {
           dom.lookupSubmitBtn.disabled = false;
           dom.lookupSubmitBtn.textContent = 'Consultar';
@@ -2808,7 +2234,26 @@
       }
 
       /* ======================================================================
-         EVENTOS DO VÍDEO E DA INTERFACE
+         MODAIS E ABAS (escopo de módulo)
+         ====================================================================== */
+      function openDnsModal() {
+        renderModalDohList();
+        updateCacheStatsUi();
+        dom.dnsModal.classList.remove('hidden');
+      }
+      function closeDnsModal() { dom.dnsModal.classList.add('hidden'); }
+      function openImportModal() { dom.importModal.classList.remove('hidden'); }
+      function closeImportModal() { dom.importModal.classList.add('hidden'); }
+
+      function updateTabButtons() {
+        const isAll = state.activeTab === 'all';
+        dom.tabAllBtn.className = `m3-btn px-3 py-1 rounded-full text-xs font-semibold ${isAll ? 'bg-indigo-500 text-white shadow-sm' : 'text-sec hover:text-indigo-400'}`;
+        dom.tabFavBtn.className = `m3-btn px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${!isAll ? 'bg-rose-500 text-white shadow-sm' : 'text-sec hover:text-rose-400'}`;
+        dom.categoryChips.classList.toggle('hidden', !isAll);
+      }
+
+      /* ======================================================================
+         EVENTOS
          ====================================================================== */
       function bindVideoEvents() {
         const v = dom.video;
@@ -2820,30 +2265,26 @@
           dom.iconPause.classList.remove('hidden');
           setStreamStatus('live');
         });
-
         v.addEventListener('pause', () => {
           dom.iconPlay.classList.remove('hidden');
           dom.iconPause.classList.add('hidden');
         });
-
         v.addEventListener('waiting', () => {
-          if (state.currentChannel) {
+          if (state.currentChannel && !dom.playerErrorOverlay.classList.contains('hidden') === false) {
             dom.playerLoadingOverlay.classList.remove('hidden');
             setStreamStatus('buffering');
           }
         });
-
         v.addEventListener('error', () => {
-          if (state.currentChannel && !state.hlsInstance) {
-            const isMixed = window.location.protocol === 'https:' && /^http:\/\//i.test(state.currentChannel.url);
-            if (isMixed) {
-              showDiagnosticError('mixed', 'Bloqueio Mixed Content (HTTP)', 'Streams HTTP diretos são bloqueados em páginas HTTPS. Copie o link para abrir no VLC ou TiviMate.');
-            } else {
-              showDiagnosticError('cors', 'Erro ao reproduzir mídia direta', 'O servidor de mídia bloqueou o acesso CORS ou o arquivo está indisponível. Tente copiar o link para um player externo.');
-            }
+          if (state.suppressVideoError || !state.currentChannel || state.hlsInstance) return;
+          if (!v.getAttribute('src')) return;
+          const isMixed = window.location.protocol === 'https:' && /^http:\/\//i.test(state.currentChannel.url);
+          if (isMixed) {
+            showDiagnosticError('mixed', 'Bloqueio Mixed Content (HTTP)', 'Streams HTTP diretos são bloqueados em páginas HTTPS. Tente HTTPS ou copie o link para abrir no VLC ou TiviMate.');
+          } else {
+            showDiagnosticError('cors', 'Erro ao reproduzir mídia direta', 'O servidor de mídia bloqueou o acesso CORS ou o arquivo está indisponível. Tente copiar o link para um player externo.');
           }
         });
-
         v.addEventListener('volumechange', () => {
           const muted = v.muted || v.volume === 0;
           dom.iconVolOn.classList.toggle('hidden', muted);
@@ -2864,34 +2305,19 @@
       }
 
       function bindUiEvents() {
-        // Splash Gate: Entrar agora
-        dom.bootEnterNowBtn.addEventListener('click', () => enterMainApp());
+        dom.bootEnterNowBtn.addEventListener('click', enterMainApp);
 
-        // Alternância Tema Escuro / Claro
         dom.toggleThemeBtn.addEventListener('click', () => {
           state.theme = state.theme === 'dark' ? 'light' : 'dark';
           applyThemeAndSurface();
           showToast(state.theme === 'dark' ? 'Modo Escuro ativado' : 'Modo Claro ativado', 'info');
         });
 
-        // Alternância Modo Sólido (Acessibilidade)
         dom.toggleSolidBtn.addEventListener('click', () => {
           state.solidMode = !state.solidMode;
           applyThemeAndSurface();
           showToast(state.solidMode ? 'Modo Sólido ativado (transparências desativadas)' : 'Modo Liquid Glass ativado', 'info');
         });
-
-        // Seleção das 7 playlists oficiais
-        const updateTabButtons = () => {
-          const isAll = state.activeTab === 'all';
-          dom.tabAllBtn.className = `m3-btn px-3 py-1 rounded-full text-xs font-semibold ${
-            isAll ? 'bg-indigo-500 text-white shadow-sm' : 'text-sec hover:text-indigo-400'
-          }`;
-          dom.tabFavBtn.className = `m3-btn px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1 ${
-            !isAll ? 'bg-rose-500 text-white shadow-sm' : 'text-sec hover:text-rose-400'
-          }`;
-          dom.categoryChips.classList.toggle('hidden', !isAll);
-        };
 
         dom.playlistPills.addEventListener('click', (e) => {
           const btn = e.target.closest('button[data-playlist-id]');
@@ -2904,27 +2330,16 @@
           }
         });
 
-        dom.tabAllBtn.addEventListener('click', () => {
-          state.activeTab = 'all';
-          updateTabButtons();
-          applyFiltersAndRender();
-        });
+        dom.tabAllBtn.addEventListener('click', () => { state.activeTab = 'all'; updateTabButtons(); applyFiltersAndRender(); });
+        dom.tabFavBtn.addEventListener('click', () => { state.activeTab = 'favorites'; updateTabButtons(); applyFiltersAndRender(); });
 
-        dom.tabFavBtn.addEventListener('click', () => {
-          state.activeTab = 'favorites';
-          updateTabButtons();
-          applyFiltersAndRender();
-        });
-
-        // Busca instantânea
         let searchTimer = null;
         dom.searchInput.addEventListener('input', (e) => {
           state.searchQuery = e.target.value;
           dom.clearSearchBtn.classList.toggle('hidden', !state.searchQuery);
           clearTimeout(searchTimer);
-          searchTimer = setTimeout(() => applyFiltersAndRender(), 110);
+          searchTimer = setTimeout(applyFiltersAndRender, 110);
         });
-
         dom.clearSearchBtn.addEventListener('click', () => {
           state.searchQuery = '';
           dom.searchInput.value = '';
@@ -2933,9 +2348,7 @@
           dom.searchInput.focus();
         });
 
-        // Auditoria DNS em Lote e Toggle "Apenas DNS Ativo"
         dom.batchAuditBtn.addEventListener('click', runBatchDnsAudit);
-
         dom.onlyActiveDnsSwitch.addEventListener('click', () => {
           state.onlyActiveDns = !state.onlyActiveDns;
           dom.onlyActiveDnsSwitch.classList.toggle('on', state.onlyActiveDns);
@@ -2943,7 +2356,6 @@
           applyFiltersAndRender();
         });
 
-        // Filtro por categoria
         dom.categoryChips.addEventListener('click', (e) => {
           const btn = e.target.closest('button[data-category]');
           if (!btn) return;
@@ -2952,107 +2364,78 @@
           applyFiltersAndRender();
         });
 
-        // Clique em canal ou coração na lista
         dom.channelList.addEventListener('click', (e) => {
           const favBtn = e.target.closest('button[data-fav-url]');
           if (favBtn) {
             e.stopPropagation();
-            const idx = Number(favBtn.dataset.favIdx);
-            const ch = state.filteredChannels[idx];
+            const ch = state.filteredChannels[Number(favBtn.dataset.favIdx)];
             if (ch) toggleFavorite(ch);
             return;
           }
-
           const card = e.target.closest('.channel-card');
           if (!card) return;
-          const idx = Number(card.dataset.channelIndex);
-          const ch = state.filteredChannels[idx];
+          const ch = state.filteredChannels[Number(card.dataset.channelIndex)];
           if (ch) playChannel(ch);
         });
 
-        // Paginação progressiva e scroll infinito
-        dom.loadMoreBtn.addEventListener('click', () => renderNextBatch());
+        dom.loadMoreBtn.addEventListener('click', renderNextBatch);
         dom.channelListContainer.addEventListener('scroll', () => {
           const el = dom.channelListContainer;
-          if (el.scrollTop + el.clientHeight >= el.scrollHeight - 240) {
-            renderNextBatch();
-          }
+          if (el.scrollTop + el.clientHeight >= el.scrollHeight - 240) renderNextBatch();
         });
 
         dom.retryPlaylistBtn.addEventListener('click', () => {
-          if (state.currentPlaylist && state.currentPlaylist.file) {
-            loadOfficialPlaylist(state.currentPlaylist);
-          }
+          if (state.currentPlaylist && state.currentPlaylist.file) loadOfficialPlaylist(state.currentPlaylist);
         });
 
-        // Controles do Player
+        // Controles do player
         dom.ctrlPlayBtn.addEventListener('click', () => {
           if (!state.currentChannel) return;
           if (dom.video.paused) dom.video.play().catch(() => {});
           else dom.video.pause();
         });
-
-        dom.ctrlReloadBtn.addEventListener('click', () => {
-          if (state.currentChannel) playChannel(state.currentChannel);
-        });
-
-        dom.ctrlMuteBtn.addEventListener('click', () => {
-          dom.video.muted = !dom.video.muted;
-        });
-
+        dom.ctrlReloadBtn.addEventListener('click', () => { if (state.currentChannel) playChannel(state.currentChannel); });
+        dom.errorReloadBtn.addEventListener('click', () => { if (state.currentChannel) playChannel(state.currentChannel); });
+        dom.ctrlMuteBtn.addEventListener('click', () => { dom.video.muted = !dom.video.muted; });
         dom.ctrlVolumeSlider.addEventListener('input', (e) => {
           const val = parseFloat(e.target.value);
           dom.video.volume = val;
           dom.video.muted = val === 0;
         });
-
         dom.ctrlFavBtn.addEventListener('click', () => {
           if (state.currentChannel) toggleFavorite(state.currentChannel);
+          else showToast('Selecione um canal primeiro.', 'info');
         });
-
         dom.ctrlCopyBtn.addEventListener('click', () => {
-          if (state.currentChannel) {
-            copyToClipboard(state.currentChannel.url, `Link M3U8 de "${state.currentChannel.name}" copiado!`);
-          } else {
-            showToast('Selecione um canal primeiro.', 'info');
-          }
+          if (state.currentChannel) copyToClipboard(state.currentChannel.url, `Link M3U8 de "${state.currentChannel.name}" copiado!`);
+          else showToast('Selecione um canal primeiro.', 'info');
         });
-
         dom.ctrlExternalBtn.addEventListener('click', () => {
-          if (state.currentChannel) {
-            window.open(state.currentChannel.url, '_blank', 'noopener,noreferrer');
-          } else {
-            showToast('Selecione um canal primeiro.', 'info');
-          }
+          if (state.currentChannel) window.open(state.currentChannel.url, '_blank', 'noopener,noreferrer');
+          else showToast('Selecione um canal primeiro.', 'info');
         });
-
         dom.ctrlPipBtn.addEventListener('click', async () => {
           try {
-            if (document.pictureInPictureElement) {
-              await document.exitPictureInPicture();
-            } else if (document.pictureInPictureEnabled && dom.video.readyState >= 2) {
-              await dom.video.requestPictureInPicture();
-            } else {
-              showToast('Picture-in-Picture indisponível neste momento.', 'warning');
-            }
+            if (document.pictureInPictureElement) await document.exitPictureInPicture();
+            else if (document.pictureInPictureEnabled && dom.video.readyState >= 2) await dom.video.requestPictureInPicture();
+            else showToast('Picture-in-Picture indisponível neste momento.', 'warning');
           } catch {
             showToast('Não foi possível ativar o Picture-in-Picture.', 'warning');
           }
         });
-
         dom.ctrlFullscreenBtn.addEventListener('click', () => {
           const target = dom.playerWrapper;
           if (!document.fullscreenElement) {
-            if (target.requestFullscreen) target.requestFullscreen();
+            if (target.requestFullscreen) target.requestFullscreen().catch(() => {});
             else if (dom.video.webkitEnterFullscreen) dom.video.webkitEnterFullscreen();
           } else if (document.exitFullscreen) {
             document.exitFullscreen();
           }
         });
 
-        // Botões do Overlay de Diagnóstico
+        // Overlay de diagnóstico
         dom.errorTryHttpsBtn.addEventListener('click', () => {
-          if (!state.currentChannel || !state.currentChannel.url) return;
+          if (!state.currentChannel) return;
           const httpsUrl = state.currentChannel.url.replace(/^http:\/\//i, 'https://');
           dom.playerErrorOverlay.classList.add('hidden');
           dom.playerLoadingOverlay.classList.remove('hidden');
@@ -3062,49 +2445,15 @@
           showToast('Tentando reprodução segura via HTTPS...', 'info');
           startDirectPlayback(httpsUrl, false, state.currentChannelDns || { host: state.currentChannel.host, ipv4: [], ipv6: [] });
         });
-
         dom.errorCopyBtn.addEventListener('click', () => {
-          if (state.currentChannel) {
-            copyToClipboard(state.currentChannel.url, 'URL copiada! Cole no VLC ou TiviMate.');
-          }
-        });
-        // Tecla ESC fecha modais e recolhe a Dynamic Island
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            closeDnsModal();
-            closeImportModal();
-            if (dom.ghDynamicIsland) dom.ghDynamicIsland.classList.remove('is-expanded');
-          }
+          if (state.currentChannel) copyToClipboard(state.currentChannel.url, 'URL copiada! Cole no VLC ou TiviMate.');
         });
 
-        // Interação touch otimizada para a GitHub Dynamic Island em dispositivos móveis
-        if (dom.ghDynamicIsland) {
-          dom.ghDynamicIsland.addEventListener('click', (e) => {
-            const isTouchDevice = window.matchMedia('(hover: none)').matches;
-            if (isTouchDevice && !dom.ghDynamicIsland.classList.contains('is-expanded')) {
-              e.preventDefault();
-              dom.ghDynamicIsland.classList.add('is-expanded');
-            }
-          });
-
-          document.addEventListener('click', (e) => {
-            if (dom.ghDynamicIsland.classList.contains('is-expanded') && !dom.ghDynamicIsland.contains(e.target)) {
-              dom.ghDynamicIsland.classList.remove('is-expanded');
-            }
-          });
-        }
-      }
-          dom.dnsModal.classList.remove('hidden');
-        };
-        const closeDnsModal = () => dom.dnsModal.classList.add('hidden');
-
+        // Central DNS
         dom.openDnsModalBtn.addEventListener('click', openDnsModal);
         dom.telemetryDetailsBtn.addEventListener('click', openDnsModal);
         dom.closeDnsModalBtn.addEventListener('click', closeDnsModal);
-        dom.dnsModal.addEventListener('click', (e) => {
-          if (e.target === dom.dnsModal) closeDnsModal();
-        });
-
+        dom.dnsModal.addEventListener('click', (e) => { if (e.target === dom.dnsModal) closeDnsModal(); });
         dom.modalRetestDohBtn.addEventListener('click', retestAllDohProviders);
 
         dom.modalDohList.addEventListener('click', (e) => {
@@ -3120,13 +2469,11 @@
             showToast('Servidor DoH customizado removido.', 'info');
             return;
           }
-
           const selectBtn = e.target.closest('button[data-select-doh]');
           if (selectBtn) {
             state.activeDohId = selectBtn.dataset.selectDoh;
             renderDohViews();
-            const active = getActiveDohProvider();
-            showToast(`Resolver DNS alterado para ${active.name}`, 'success');
+            showToast(`Resolver DNS alterado para ${getActiveDohProvider().name}`, 'success');
           }
         });
 
@@ -3146,26 +2493,15 @@
         dom.addCustomDohBtn.addEventListener('click', async () => {
           const name = dom.customDohName.value.trim() || 'DoH Customizado';
           const template = dom.customDohUrl.value.trim();
-          const acceptDnsJson = dom.customDohAccept.checked;
-
           if (!template || !/^https:\/\//i.test(template)) {
             showToast('Informe uma URL HTTPS válida para o servidor DoH.', 'warning');
             return;
           }
-
           const newProvider = {
-            id: `custom_doh_${Date.now()}`,
-            name,
-            subtitle: 'Servidor DoH Personalizado',
-            template,
-            acceptDnsJson,
-            custom: true,
-            status: 'testing',
-            latency: null,
-            resolvedIp: null,
-            dnssec: false,
+            id: `custom_doh_${Date.now()}`, name, subtitle: 'Servidor DoH Personalizado', template,
+            acceptDnsJson: dom.customDohAccept.checked, custom: true,
+            status: 'testing', latency: null, resolvedIp: null, dnssec: false,
           };
-
           state.dohProviders.push(newProvider);
           saveCustomDohProviders();
           dom.customDohName.value = '';
@@ -3182,13 +2518,10 @@
           }
         });
 
-        // Modal de Importação
-        const closeImportModal = () => dom.importModal.classList.add('hidden');
-        dom.openImportModalBtn.addEventListener('click', () => dom.importModal.classList.remove('hidden'));
+        // Importação
+        dom.openImportModalBtn.addEventListener('click', openImportModal);
         dom.closeImportModalBtn.addEventListener('click', closeImportModal);
-        dom.importModal.addEventListener('click', (e) => {
-          if (e.target === dom.importModal) closeImportModal();
-        });
+        dom.importModal.addEventListener('click', (e) => { if (e.target === dom.importModal) closeImportModal(); });
 
         dom.importUrlSubmitBtn.addEventListener('click', () => {
           const url = dom.importUrlInput.value.trim();
@@ -3218,32 +2551,51 @@
           reader.readAsText(file);
         });
 
-        // Tecla ESC fecha modais
+        // ESC: fecha modais e recolhe a Dynamic Island (listener único)
         document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape') {
-            closeDnsModal();
-            closeImportModal();
-          }
+          if (e.key !== 'Escape') return;
+          closeDnsModal();
+          closeImportModal();
+          if (dom.ghDynamicIsland) dom.ghDynamicIsland.classList.remove('is-expanded');
         });
+
+        // Dynamic Island: toque em dispositivos sem hover
+        if (dom.ghDynamicIsland) {
+          dom.ghDynamicIsland.addEventListener('click', (e) => {
+            const isTouch = window.matchMedia('(hover: none)').matches;
+            if (isTouch && !dom.ghDynamicIsland.classList.contains('is-expanded')) {
+              e.preventDefault();
+              dom.ghDynamicIsland.classList.add('is-expanded');
+            }
+          });
+          document.addEventListener('click', (e) => {
+            if (dom.ghDynamicIsland.classList.contains('is-expanded') && !dom.ghDynamicIsland.contains(e.target)) {
+              dom.ghDynamicIsland.classList.remove('is-expanded');
+            }
+          });
+        }
       }
 
       /* ======================================================================
-         BOOTSTRAP DA APLICAÇÃO
+         BOOTSTRAP
          ====================================================================== */
       function bootstrap() {
         applyThemeAndSurface();
         initDohPool();
         renderPlaylistPills();
         updateFavBadge();
+        updateTabButtons();
         updateCacheStatsUi();
         bindVideoEvents();
         bindUiEvents();
-
-        // Inicia o handshake paralelo de DNS-over-HTTPS
         runBootDnsHandshake();
       }
 
-      window.addEventListener('DOMContentLoaded', bootstrap);
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', bootstrap);
+      } else {
+        bootstrap();
+      }
     })();
   </script>
 </body>
